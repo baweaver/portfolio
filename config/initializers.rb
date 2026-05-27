@@ -18,6 +18,7 @@ Bridgetown.configure do |config|
   url ""
   template_engine "erb"
   permalink "pretty"
+  base_path "/portfolio"
 
   collections do
     posts do
