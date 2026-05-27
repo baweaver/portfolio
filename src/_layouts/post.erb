@@ -68,3 +68,25 @@ layout: default
     <% end %>
   </aside>
 </div>
+<% if series %>
+<div class="series-sticky">
+  <% if series["prev"] %>
+    <a href="<%= relative_url series["prev"].relative_url %>">← Prev</a>
+  <% else %>
+    <span class="disabled">← Prev</span>
+  <% end %>
+  <span class="series-pos"><%= series["current_index"] + 1 %> of <%= series["posts"].length %></span>
+  <% if series["next"] %>
+    <a href="<%= relative_url series["next"].relative_url %>">Next →</a>
+  <% else %>
+    <span class="disabled">Next →</span>
+  <% end %>
+</div>
+<% end %>
+<button class="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">↑</button>
+<script>
+window.addEventListener("scroll", () => {
+  const btn = document.querySelector(".back-to-top");
+  if (btn) btn.classList.toggle("visible", window.scrollY > 600);
+});
+</script>

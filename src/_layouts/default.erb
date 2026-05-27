@@ -4,6 +4,24 @@
   <%= render "head" %>
 </head>
 <body>
+  <div class="mobile-bar">
+    <a href="<%= relative_url "/" %>" class="mobile-brand">
+      <%== img "/images/full_logo_light.png", alt: "Logo", class: "mobile-logo" %>
+      <span class="mobile-wordmark">baweaver</span>
+    </a>
+    <button class="hamburger" aria-label="Menu" onclick="document.querySelector('.mobile-menu').classList.add('open')">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+  </div>
+  <nav class="mobile-menu">
+    <button class="close-btn" aria-label="Close" onclick="this.parentElement.classList.remove('open')">×</button>
+    <a href="<%= relative_url "/" %>">Home</a>
+    <a href="<%= relative_url "/writing" %>">Writing</a>
+    <a href="<%= relative_url "/speaking" %>">Speaking</a>
+    <a href="<%= relative_url "/philosophy" %>">Philosophy</a>
+    <a href="<%= relative_url "/about" %>">About</a>
+    <a href="<%= relative_url "/contact" %>">Contact</a>
+  </nav>
   <div class="shell">
     <%= render "sidebar" %>
     <%== img "/images/vertical_divider.png", alt: "", class: "divider" %>

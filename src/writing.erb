@@ -11,20 +11,22 @@ title: Writing
     </div>
     <div class="post-list">
       <% collections.posts.resources.select { |p| p.data.date }.sort_by { |p| p.data.date }.reverse.each do |post| %>
-        <a href="<%= post.relative_url %>" class="post-list-item">
-          <span class="post-list-meta"><%= post.data.date.strftime("%b %d, %Y") %></span>
-          <h2><%= post.data.title %></h2>
-          <% if post.data.description %>
-            <p class="post-list-description"><%= post.data.description %></p>
-          <% end %>
+        <div class="post-list-entry">
+          <a href="<%= relative_url post.relative_url %>" class="post-list-item">
+            <span class="post-list-meta"><%= post.data.date.strftime("%b %d, %Y") %></span>
+            <h2><%= post.data.title %></h2>
+            <% if post.data.description %>
+              <p class="post-list-description"><%= post.data.description %></p>
+            <% end %>
+          </a>
           <% if post.data.tags&.any? %>
             <div class="tag-list">
               <% post.data.tags.each do |tag| %>
-                <span class="tag"><%= tag %></span>
+                <a href="<%= relative_url "/tags/#{tag.downcase.gsub(/[^a-z0-9]+/, "-").gsub(/-+$/, "")}/" %>" class="tag"><%= tag %></a>
               <% end %>
             </div>
           <% end %>
-        </a>
+        </div>
       <% end %>
     </div>
   </div>
