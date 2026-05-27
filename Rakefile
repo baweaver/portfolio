@@ -7,7 +7,7 @@ task :default => :build
 desc "Build frontend and site"
 task :build do
   sh "node esbuild.config.js"
-  Rake::Task["bridgetown:build"].invoke
+  Bridgetown::Commands::Build.start
 end
 
 # Run rake without specifying any command to execute a deploy build by default.
