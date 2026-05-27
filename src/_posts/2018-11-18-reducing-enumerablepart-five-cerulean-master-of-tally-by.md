@@ -4,8 +4,8 @@ title: "Reducing Enumerable — Part Five: Cerulean, Master of Tally By"
 series: "reducing-enumerable"
 date: "2018-11-18"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "functional", "beginners"]
+description: "Part five of Reducing Enumerable — Cerulean teaches Red how to implement tally_by using reduce."
 ---
 
 This brings us to part five of Reducing Enumerable where we meet Cerulean, the soon to be master of Tally By.

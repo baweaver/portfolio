@@ -4,8 +4,8 @@ title: "Reducing Enumerable — Part Three: Indigo, Master of Select"
 series: "reducing-enumerable"
 date: "2018-11-17"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "functional", "beginners"]
+description: "Part three of Reducing Enumerable — Indigo teaches Red how to implement select using reduce."
 ---
 
 This brings us to part three of Reducing Enumerable where we meet Indigo, the master of Select.

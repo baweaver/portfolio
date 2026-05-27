@@ -3,8 +3,8 @@ layout: "post"
 title: "Qo::Evil — Dynamic Compilation with eval"
 date: "2018-04-30"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "patternmatching", "metaprogramming"]
+description: "Using eval to dynamically compile Qo pattern matches into native Ruby for near-vanilla performance."
 ---
 
 One of the biggest arguments against Qo, and rightly so, was that most pattern matching is done in tight loops that get run over thousands of items at a time.
@@ -26,32 +26,34 @@ Before we start, we should take a look at where Qo was before the Evil project:
 
 The pertinent numbers are:
 
-    Running on Qo v0.3.0 at rev 77eb2544c41b33361a561178b145d33fa2409bde
-     - Ruby ruby 2.5.1p57 (2018-03-29 revision 63029) [x86_64-darwin17]
+```ruby
+Running on Qo v0.3.0 at rev 77eb2544c41b33361a561178b145d33fa2409bde
+ - Ruby ruby 2.5.1p57 (2018-03-29 revision 63029) [x86_64-darwin17]
 
-    Array * Array - Literal
-      Vanilla:  8805260.8 i/s
-      Qo.and:   987041.0 i/s - 8.92x  slower
+Array * Array - Literal
+  Vanilla:  8805260.8 i/s
+  Qo.and:   987041.0 i/s - 8.92x  slower
 
-    Array * Array - Index pattern match
-     Vanilla:   550096.4 i/s
-      Qo.and:   226391.4 i/s - 2.43x  slower
+Array * Array - Index pattern match
+ Vanilla:   550096.4 i/s
+  Qo.and:   226391.4 i/s - 2.43x  slower
 
-    Array * Object - Predicate match
-      Vanilla:  2147916.4 i/s
-      Qo.and:   303118.1 i/s - 7.09x  slower
+Array * Object - Predicate match
+  Vanilla:  2147916.4 i/s
+  Qo.and:   303118.1 i/s - 7.09x  slower
 
-    Array * Array - Select index pattern match
-      Vanilla:   141336.5 i/s
-      Qo.and:    73799.3 i/s - 1.92x  slower
+Array * Array - Select index pattern match
+  Vanilla:   141336.5 i/s
+  Qo.and:    73799.3 i/s - 1.92x  slower
 
-    Hash * Hash - Hash intersection
-      Vanilla:   392298.2 i/s
-      Qo.and:    48213.1 i/s - 8.14x  slower
+Hash * Hash - Hash intersection
+  Vanilla:   392298.2 i/s
+  Qo.and:    48213.1 i/s - 8.14x  slower
 
-    Hash * Object - Property match
-      Vanilla:   361140.4 i/s
-      Qo.and:    46667.1 i/s - 7.74x  slower
+Hash * Object - Property match
+  Vanilla:   361140.4 i/s
+  Qo.and:    46667.1 i/s - 7.74x  slower
+```
 
 The question is, can we make these numbers the same? Let’s find out.
 
@@ -59,18 +61,22 @@ The question is, can we make these numbers the same? Let’s find out.
 
 Essentially a pattern match is comprised of an and condition applied to several queries. Consider:
 
-    Qo.match(person) do |m|
-      m.when(name: /Foo/, age: 20..30) { ... }
-      m.else { ... }
-    end
+```ruby
+Qo.match(person) do |m|
+  m.when(name: /Foo/, age: 20..30) { ... }
+  m.else { ... }
+end
+```
 
 We’re matching against a person where their name contains Foo and their age is between 20 and 30. Can that be expressed as an if conditional? Sure:
 
-    if /Foo/.match?(person.name) && (20..30).include?(person.age)
-      ...
-    else
-      ...
-    end
+```ruby
+if /Foo/.match?(person.name) && (20..30).include?(person.age)
+  ...
+else
+  ...
+end
+```
 
 Now some may fairly say why not just use the if conditional here. They’re right. In many cases you can, but in ways it lacks some of the succinctness of a pattern match, and in cases where you have a lot of conditions to watch for it can get to be a mess very quickly.
 
@@ -92,12 +98,16 @@ The question is how exactly do we take a match syntax and convert it into such a
 
 Let’s open with remembering that a match remembers every one of the “matchers” furnished to it in instance variables:
 
-    Qo.and(name: /Foo/, age: 20..30).call(person)
+```ruby
+Qo.and(name: /Foo/, age: 20..30).call(person)
+```
 
 Is effectively saying:
 
-    /Foo/.match?(person.public_send(:name)) &&
-    (20..30).include?(person.public_send(:age))
+```ruby
+/Foo/.match?(person.public_send(:name)) &&
+(20..30).include?(person.public_send(:age))
+```
 
 Qo would use public_send to retrieve these values, but that’s also quite a bit slower than just calling the method on the object. We’ll want to remember that.
 
@@ -109,23 +119,33 @@ For now we know we’re matching a Hash (keyword matchers) with an Object (perso
 
 The first consideration is how can we mitigate the need for public_send without opening ourselves to a massive security risk. Consider:
 
-    eval("target.#{method}")
+```ruby
+eval("target.#{method}")
+```
 
 What happens if your input source is untrusted and sends something like this:
 
-    method = 'nil?; DirTools.rm_rf("/")'
+```ruby
+method = 'nil?; DirTools.rm_rf("/")'
+```
 
 It certainly doesn’t make for a good day now does it. What can we do to mitigate the issue? A good first step might be to sanitize our input:
 
-    method.to_s.gsub(/[^a-zA-Z0-9_?!]/, '')
+```ruby
+method.to_s.gsub(/[^a-zA-Z0-9_?!]/, '')
+```
 
 Anything that doesn’t match a method signature is ripped, though if we have the target we could also test against it as well:
 
-    target.respond_to?(method)
+```ruby
+target.respond_to?(method)
+```
 
 The danger with eval is you always need to trust input going into it. That includes symbols, considering they could also do this:
 
-    :'nil?; `rm -rf /`'
+```ruby
+:'nil?; `rm -rf /`'
+```
 
 Never trust input from the outside world around eval.
 
@@ -133,23 +153,29 @@ Never trust input from the outside world around eval.
 
 Now for a matcher we know we have either array_matchers or keyword_matchers to deal with. In the above case we have keywords:
 
-    Qo.and(name: /Foo/, age: 20..30).call(person)
+```ruby
+Qo.and(name: /Foo/, age: 20..30).call(person)
+```
 
 Under the hood Qo would loop through all the matchers and public send. Why not loop and transform them into the string equivalents we saw above?
 
-    match_strings = keyword_matchers.map { |key, matcher|
-      case matcher
-      when Regexp then "#{matcher.inspect}.match?(target.#{key})"
-      when Range then "(#{matcher.inspect}).include?(target.#{key})"
-      else ...
-      end
-    }
+```ruby
+match_strings = keyword_matchers.map { |key, matcher|
+  case matcher
+  when Regexp then "#{matcher.inspect}.match?(target.#{key})"
+  when Range then "(#{matcher.inspect}).include?(target.#{key})"
+  else ...
+  end
+}
+```
 
 Granted this assumes we’ve sanitized the keys already. We’re effectively taking the string variant of what an optimized bit of Ruby would look like and interpolating the matcher and the key we call on the target. This is mildly different for other type matches, but it all translates to roughly the same case block.
 
 After we get those transformations, it becomes a matter of combining them into a query. Join has just the thing:
 
-    match_query = match_strings.join(' && ')
+```ruby
+match_query = match_strings.join(' && ')
+```
 
 ## Uncoercibles and the Lazy Route
 
@@ -159,34 +185,40 @@ Bindings give us the ability to inject state into a local binding and evaluate c
 
 All we need to do is in the else statement set a binding variable instead. For now we can stash those in a hash to play with later:
 
-    variables = {}
+```ruby
+variables = {}
 
-    ...
+...
 
-    if uncoercible
-      variables[name] = matcher
-      "#{name} === target.#{key}"
-    end
+if uncoercible
+  variables[name] = matcher
+  "#{name} === target.#{key}"
+end
+```
 
 Question is, where does that name come from? Well the method I’d used was to just make an Enumerator full of letters to pull from:
 
-    letters = ('a'..'zzz').to_enum
+```ruby
+letters = ('a'..'zzz').to_enum
 
-    ...
+...
 
-    name = "_qo_evil_#{letters.next}"
+name = "_qo_evil_#{letters.next}"
+```
 
 So we just keep grabbing a new suffix and prefix it with something recognizable in case we get a crash later.
 
 After we finish mapping the strings we can have some fun with the local binding:
 
-    bind = binding
+```ruby
+bind = binding
 
-    variables.each { |name, var|
-      bind.local_variable_set(name.to_sym, var)
-    }
+variables.each { |name, var|
+  bind.local_variable_set(name.to_sym, var)
+}
 
-    bind.eval(match_query)
+bind.eval(match_query)
+```
 
 …but then that just makes for a bigger mess as we’re not storing the compiled version anywhere. This just keeps running the entire rewrite every call which is even worse!
 
@@ -196,24 +228,26 @@ Let’s fix that.
 
 Let’s take a look at the call method from the evil branch:
 
-    def call(target)
-      return [@_proc](http://twitter.com/_proc).call(target) if [@_proc](http://twitter.com/_proc)
+```ruby
+def call(target)
+  return @_proc.call(target) if @_proc
 
-      bind = binding
+  bind = binding
 
-      compiled_matchers, variables = compile(target)
-      match_query = merge_compilation(compiled_matchers)
+  compiled_matchers, variables = compile(target)
+  match_query = merge_compilation(compiled_matchers)
 
-      variables.each { |name, var|
-        bind.local_variable_set(name.to_sym, var)
-      }
+  variables.each { |name, var|
+    bind.local_variable_set(name.to_sym, var)
+  }
 
-      @_proc = bind.eval(%~
-        Proc.new { |target| #{match_query} }
-      ~)
+  @_proc = bind.eval(%~
+    Proc.new { |target| #{match_query} }
+  ~)
 
-      @_proc.call(target)
-    end
+  @_proc.call(target)
+end
+```
 
 The only real difference here is that there are multiple ways to combine matchers (and, or, not) so that got accounted for in merge_compilation.
 

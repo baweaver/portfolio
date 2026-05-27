@@ -4,8 +4,8 @@ title: "Reducing Enumerable — Part Two: Chartreuse, Master of Map"
 series: "reducing-enumerable"
 date: "2018-11-17"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "functional", "beginners"]
+description: "Part two of Reducing Enumerable — Chartreuse teaches Red the secrets of implementing map with reduce."
 ---
 
 This brings us to part two of Reducing Enumerable where we meet Chartreuse, the master of Map.

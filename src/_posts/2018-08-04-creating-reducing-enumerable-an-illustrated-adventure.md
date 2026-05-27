@@ -3,8 +3,8 @@ layout: "post"
 title: "Creating “Reducing Enumerable — An Illustrated Adventure”"
 date: "2018-08-04"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "functional", "community"]
+description: "Behind the scenes of creating a fully illustrated conference talk about reduce for Southeast Ruby 2018."
 ---
 
 How I created and illustrated my conference talk for Southeast Ruby 2018.

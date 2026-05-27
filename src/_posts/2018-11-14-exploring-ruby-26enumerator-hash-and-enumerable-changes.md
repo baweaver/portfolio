@@ -3,8 +3,8 @@ layout: "post"
 title: "Exploring Ruby 2.6 — Enumerator, Hash, and Enumerable Changes"
 date: "2018-11-14"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "functional"]
+description: "Exploring new Enumerable and Enumerator features in Ruby 2.6, including to_h with blocks and Enumerator chaining."
 ---
 
 New features to try in the upcoming ruby-2.6.0-preview3
@@ -20,26 +20,34 @@ As we get closer to Christmas, we’re going to see more and more features for R
 
 If you started Ruby in the earlier days, you’re probably familiar with Hash[] and its usage like this:
 
-    hash = { a: 1, b: 2 }
-    Hash[hash.map { |k, v| [k, v + 1] }]
-    => { a: 2, b: 3 }
+```ruby
+hash = { a: 1, b: 2 }
+Hash[hash.map { |k, v| [k, v + 1] }]
+=> { a: 2, b: 3 }
+```
 
 In the 2.x days, we started to see Enumerable#to_h :
 
-    hash = { a: 1, b: 2 }
-    hash.map { |k, v| [k, v + 1] }.to_h
-    => { a: 2, b: 3 }
+```ruby
+hash = { a: 1, b: 2 }
+hash.map { |k, v| [k, v + 1] }.to_h
+=> { a: 2, b: 3 }
+```
 
 This was certainly a more palatable option, but what if it went one step further? In Ruby 2.6+ to_h will take a block that works quite a bit like map:
 
-    hash = { a: 1, b: 2 }
-    hash.to_h { |k, v| [k, v + 1] }
-    => { a: 2, b: 3 }
+```ruby
+hash = { a: 1, b: 2 }
+hash.to_h { |k, v| [k, v + 1] }
+=> { a: 2, b: 3 }
+```
 
 Since this is a method on Enumerable, we can use it on other things like Ranges and Arrays as well:
 
-    (1..5).to_h { |n| [n, n**2] }
-    => {1=>1, 2=>4, 3=>9, 4=>16, 5=>25}
+```ruby
+(1..5).to_h { |n| [n, n**2] }
+=> {1=>1, 2=>4, 3=>9, 4=>16, 5=>25}
+```
 
 Admittedly it’s not as explicit as the combination of map and to_h, but it does give us one more step to cut down on hash conversion code.
 
@@ -47,19 +55,27 @@ Admittedly it’s not as explicit as the combination of map and to_h, but it doe
 
 In previous versions of Ruby, in order to merge multiple hashes together you’d have to do them one at a time:
 
-    h1.merge(h2).merge(h3).merge(h4)
+```ruby
+h1.merge(h2).merge(h3).merge(h4)
+```
 
 …or potentially use the double-splat to treat them all as one big inline hash:
 
-    h1.merge(**h2, **h3, **h4)
+```ruby
+h1.merge(**h2, **h3, **h4)
+```
 
 …or for those of us with a particular love for reduce, there’s even a flavor of Ruby for that!
 
-    [h1, h2, h3, h4].reduce(&:merge)
+```ruby
+[h1, h2, h3, h4].reduce(&:merge)
+```
 
 Now those all work, but variadic, that’s where it’s at. Ruby 2.6 introduces variadic arguments for Hash#merge :
 
-    h1.merge(h2, h3, h4)
+```ruby
+h1.merge(h2, h3, h4)
+```
 
 Note that this works with Hash#merge! and Hash#update as well.
 
@@ -69,7 +85,9 @@ That’s quite a mouthful — try saying that one five times fast. Go ahead and 
 
 Before 2.6, if you try this:
 
-    (1..100).step(3) == (1..100).step(3)
+```ruby
+(1..100).step(3) == (1..100).step(3)
+```
 
 You were going to get a nice ol’ false right back out. They look the same though, right? Why aren’t they equal?
 
@@ -81,17 +99,21 @@ Most of the issue was that Enumerators didn’t really have introspective inform
 
 As an added benefit, we got a few more things to play with. Mostly keywords to make our intent more explicit in creating stepped enumerators:
 
-    (1..10).step(3) == 1.step(by: 3, to: 10)
+```ruby
+(1..10).step(3) == 1.step(by: 3, to: 10)
 
-    1.step(by: 2, to: 10)
-    => [1, 3, 5, 7, 9]
+1.step(by: 2, to: 10)
+=> [1, 3, 5, 7, 9]
 
-    (1..10).step(3)
-    => [1, 4, 7]
+(1..10).step(3)
+=> [1, 4, 7]
+```
 
 We also got a new use for the modulo operator:
 
-    (1..100).step(3) == (1..100) % 3
+```ruby
+(1..100).step(3) == (1..100) % 3
+```
 
 …though to be fair I would bet that this one is going to be used far more frequently for code golf than actual production code.
 
@@ -99,23 +121,25 @@ We also got a new use for the modulo operator:
 
 Now it wouldn’t be an article without an incredibly contrived, and quite frankly horrifying, code example. Well, fear not! We’ve got just the thing, and it’s our old friend FizzBuzz:
 
-    def fizzbuzz(rules, range)
-      mappings = rules.map { |step, value|
-        (range % step).to_h { |n| [n, value || n] }
-      }
+```ruby
+def fizzbuzz(rules, range)
+  mappings = rules.map { |step, value|
+    (range % step).to_h { |n| [n, value || n] }
+  }
 
-      fizzbuzz_map = {}.merge(*mappings) { |_, old_value, new_value|
-        is_numeric = [old_value, new_value].any?(Numeric)
-        is_numeric ? new_value : old_value + new_value
-      }
+  fizzbuzz_map = {}.merge(*mappings) { |_, old_value, new_value|
+    is_numeric = [old_value, new_value].any?(Numeric)
+    is_numeric ? new_value : old_value + new_value
+  }
 
-      fizzbuzz_map.values
-    end
+  fizzbuzz_map.values
+end
 
-    rules = {1 => nil, 3 => 'Fizz', 5 => 'Buzz'}
-    range = (1..100)
+rules = {1 => nil, 3 => 'Fizz', 5 => 'Buzz'}
+range = (1..100)
 
-    puts fizzbuzz(rules, range)
+puts fizzbuzz(rules, range)
+```
 
 What we’re doing here is defining a rule set using a hash indicating the step rate (how many numbers to skip since the last number in the range) and a value.
 

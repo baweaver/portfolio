@@ -3,15 +3,17 @@ layout: "post"
 title: "I want to paste in Pry!"
 date: "2018-12-27"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "programming"]
+description: "Tips for pasting multi-line code into Pry, including using edit and pbpaste on Mac."
 ---
 
 If you’ve used Pry before, you know that pasting things into it may not quite work as expected with long segments of code.
 
 For a while, this was the commonly accepted solution:
 
-    > edit
+```ruby
+> edit
+```
 
 That would drop you into your editor (set in $EDITOR), and allow you to code to your hearts content. Anything you save before closing gets thrown into Pry line-by-line.
 
@@ -43,22 +45,24 @@ Particularly pay attention to this comment:
 
 That means that everything in the above article works except for the final TMUX configuration, which becomes something more like this:
 
-    # Copy-paste integration
-    set-option -g default-command "reattach-to-user-namespace -l bash"
+```ruby
+# Copy-paste integration
+set-option -g default-command "reattach-to-user-namespace -l bash"
 
-    # Use vim keybindings in copy mode
-    setw -g mode-keys vi
+# Use vim keybindings in copy mode
+setw -g mode-keys vi
 
-    # Setup 'v' to begin selection as in Vim
-    bind-key -T copy-mode-vim v begin-selection
-    bind-key -T copy-mode-vim y copy-pipe "reattach-to-user-namespace pbcopy"
+# Setup 'v' to begin selection as in Vim
+bind-key -T copy-mode-vim v begin-selection
+bind-key -T copy-mode-vim y copy-pipe "reattach-to-user-namespace pbcopy"
 
-    # Update default binding of `Enter` to also use copy-pipe
-    unbind -T copy-mode-vim Enter
-    bind-key -T copy-mode-vim Enter copy-pipe "reattach-to-user-namespace pbcopy"
+# Update default binding of `Enter` to also use copy-pipe
+unbind -T copy-mode-vim Enter
+bind-key -T copy-mode-vim Enter copy-pipe "reattach-to-user-namespace pbcopy"
 
-    # Bind ']' to use pbpaste
-    bind ] run "reattach-to-user-namespace pbpaste | tmux load-buffer - && tmux paste-buffer"
+# Bind ']' to use pbpaste
+bind ] run "reattach-to-user-namespace pbpaste | tmux load-buffer - && tmux paste-buffer"
+```
 
 This allows TMUX to be able to interface with pbcopy and pbpaste to access the system clipboard.
 
@@ -68,19 +72,21 @@ To make this more accessible in Pry, we’re going to want to add a few things t
 [**Ruby pbcopy and pbpaste (Example)**
 *A protip by weppos about shell, clipboard, irb, pbcopy, pbpaste, and ruby.*coderwall.com](https://coderwall.com/p/qp2aha/ruby-pbcopy-and-pbpaste)
 
-    def pbcopy(input)
-      str = input.to_s
-      IO.popen('pbcopy', 'w') { |f| f << str }
-      str
-    end
+```ruby
+def pbcopy(input)
+  str = input.to_s
+  IO.popen('pbcopy', 'w') { |f| f << str }
+  str
+end
 
-    def pbpaste
-      `pbpaste`
-    end
+def pbpaste
+  `pbpaste`
+end
 
-    Pry::Commands.block_command 'paste_eval', "Pastes from the clipboard then evals it in the context of Pry" do
-      _pry_.input = StringIO.new(pbpaste)
-    end
+Pry::Commands.block_command 'paste_eval', "Pastes from the clipboard then evals it in the context of Pry" do
+  _pry_.input = StringIO.new(pbpaste)
+end
+```
 
 The last line gives us a command to be able to use in pry called paste_eval.
 

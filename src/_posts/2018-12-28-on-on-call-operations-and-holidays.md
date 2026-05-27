@@ -3,8 +3,8 @@ layout: "post"
 title: "On On-Call, Operations, and Holidays"
 date: "2018-12-28"
 categories: []
-tags: []
-description: ""
+tags: ["ops", "career", "life"]
+description: "Thoughts on on-call culture, operations during the holidays, and building sustainable practices for engineering teams."
 ---
 
 Operations can be a challenging job, especially around the holidays. Recently there’s been a lot of talk around on-call, so here are my two cents on the matter.

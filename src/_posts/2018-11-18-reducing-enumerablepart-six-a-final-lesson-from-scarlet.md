@@ -4,8 +4,8 @@ title: "Reducing Enumerable — Part Six: A Final Lesson from Scarlet"
 series: "reducing-enumerable"
 date: "2018-11-18"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "functional", "beginners"]
+description: "The finale of Reducing Enumerable — Scarlet reveals the true nature of reduce and Red's journey comes full circle."
 ---
 
 This brings us to part six of Reducing Enumerable where we return to Scarlet for Red’s final lesson.

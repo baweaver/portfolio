@@ -3,8 +3,8 @@ layout: "post"
 title: "New in Enumerable — Triple Equals Predicates"
 date: "2017-12-02"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "metaprogramming"]
+description: "Exploring a Ruby proposal to add triple-equals predicate methods to Enumerable for more expressive filtering."
 ---
 
 **Original Issue**: [https://bugs.ruby-lang.org/issues/11286](https://bugs.ruby-lang.org/issues/11286)
@@ -25,14 +25,16 @@ It will fill your mind with all types of bad ideas in the next few paragraphs fo
 
 First off, what do I mean when I say predicates? I’m referring to the predicate-style methods in Enumerable, the ones that end with a question mark:
 
-    [1,2,3].all? { |n| n.even? } # => false
-    [2,4,6].all? { |n| n.even? } # => true
+```ruby
+[1,2,3].all? { |n| n.even? } # => false
+[2,4,6].all? { |n| n.even? } # => true
 
-    [1,2,3].any? { |n| n.even? } # => true
-    [1,3,5].any? { |n| n.even? } # => false
+[1,2,3].any? { |n| n.even? } # => true
+[1,3,5].any? { |n| n.even? } # => false
 
-    [1,2,3].none? { |n| n.even? } # => false
-    [1,3,5].none? { |n| n.even? } # => true
+[1,2,3].none? { |n| n.even? } # => false
+[1,3,5].none? { |n| n.even? } # => true
+```
 
 We’ll get back to the short-hand variants later, but for now this will do as a base example.
 
@@ -40,7 +42,9 @@ We’ll get back to the short-hand variants later, but for now this will do as a
 
 Now there’s another method in Enumerable that’s easy for us to forget about called grep:
 
-    [1,2,3, 'string'].grep(Numeric) # => [1, 2, 3]
+```ruby
+[1,2,3, 'string'].grep(Numeric) # => [1, 2, 3]
+```
 
 Now what does the doc say about how it works?
 > Returns an array of every element in *enum* for which Pattern === element.
@@ -57,13 +61,17 @@ What would happen if our predicate friends up there decided it was right time to
 
 Magic. Magic would happen.
 
-    %w(foo bar baz).none?(/foo/) # => false
+```ruby
+%w(foo bar baz).none?(/foo/) # => false
 
-    [1,2,3].all?(Numeric) # => true
+[1,2,3].all?(Numeric) # => true
+```
 
 Interesting, but not quite magic. A bit further?
 
-    %w(10.0.0.1 10.0.0.5).all?(IPAddr.new('10.0.0.0/8'))
+```ruby
+%w(10.0.0.1 10.0.0.5).all?(IPAddr.new('10.0.0.0/8'))
+```
 
 Nifty if we’re SysAdmins, but a bit more perhaps.
 
@@ -79,47 +87,55 @@ Just note: **THIS IS NOT GOOD RUBY**
 
 Let’s borrow our people data from the Triple Equals Black Magic post:
 
-    people = [
-      {name: 'Bob', age: 20},
-      {name: 'Sue', age: 30},
-      {name: 'Jack', age: 10},
-      {name: 'Jill', age: 4},
-      {name: 'Jane', age: 5}
-    ]
+```ruby
+people = [
+  {name: 'Bob', age: 20},
+  {name: 'Sue', age: 30},
+  {name: 'Jack', age: 10},
+  {name: 'Jill', age: 4},
+  {name: 'Jane', age: 5}
+]
+```
 
 To start out with we’re going to need to get our wrapper made:
 
-    class Q
-      def initialize(conds = {}) @conds = conds end
+```ruby
+class Q
+  def initialize(conds = {}) @conds = conds end
 
-      def ===(other)
-        @conds.all? { |k, matcher| matcher === other[k] }
-      end
-    end
+  def ===(other)
+    @conds.all? { |k, matcher| matcher === other[k] }
+  end
+end
 
-    def Q(conds = {}) Q.new(conds) end
+def Q(conds = {}) Q.new(conds) end
+```
 
 Now let’s try this one out:
 
-    people.any?(Q(age: 1..10)) # => true
+```ruby
+people.any?(Q(age: 1..10)) # => true
+```
 
 Nifty! Though you could technically use this trick already with to_proc :
 
-    class Q
-      def initialize(conds = {}) @conds = conds end
+```ruby
+class Q
+  def initialize(conds = {}) @conds = conds end
 
-      def ===(other)
-        @conds.all? { |k, matcher| matcher === other[k] }
-      end
+  def ===(other)
+    @conds.all? { |k, matcher| matcher === other[k] }
+  end
 
-      def to_proc
-        -> other { self === other }
-      end
-    end
+  def to_proc
+    -> other { self === other }
+  end
+end
 
-    def Q(conds = {}) Q.new(conds) end
+def Q(conds = {}) Q.new(conds) end
 
-    people.select(&Q(age: 20))
+people.select(&Q(age: 20))
+```
 
 Still fun. Well, I had fun at least.
 

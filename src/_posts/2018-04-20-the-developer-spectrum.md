@@ -3,8 +3,8 @@ layout: "post"
 title: "The Developer Spectrum"
 date: "2018-04-20"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "community", "programming"]
+description: "A playful taxonomy of developer archetypes represented by different colored lemurs and their programming philosophies."
 ---
 
 What started with a “Black Magic” Lemur I frequently dressed in a red starry wizard robe ended up expanding a bit after a joke from a good friend and coworker:

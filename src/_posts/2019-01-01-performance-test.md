@@ -3,45 +3,49 @@ layout: "post"
 title: "Performance Test"
 date: "2019-01-01"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "functional"]
+description: "Benchmarking different approaches to implementing select with reduce — push, shovel, and pure plus."
 ---
 
 Test code:
 
-    def select_mutate_push(list, &fn)
-      list.reduce([]) { |a, v| yield(v) ? a.push(v) : a }
-    end
+```ruby
+def select_mutate_push(list, &fn)
+  list.reduce([]) { |a, v| yield(v) ? a.push(v) : a }
+end
 
-    def select_mutate_shovel(list, &fn)
-      list.reduce([]) { |a, v| yield(v) ? a.<<(v) : a }
-    end
+def select_mutate_shovel(list, &fn)
+  list.reduce([]) { |a, v| yield(v) ? a.<<(v) : a }
+end
 
-    def select_pure_plus(list, &fn)
-      list.reduce([]) { |a, v| yield(v) ? a + [v] : a }
-    end
+def select_pure_plus(list, &fn)
+  list.reduce([]) { |a, v| yield(v) ? a + [v] : a }
+end
 
-    require 'benchmark/ips'
+require 'benchmark/ips'
 
-    numbers = (1..10_000).to_a.shuffle
+numbers = (1..10_000).to_a.shuffle
 
-    Benchmark.ips do |x|
-      x.report('Mutation with Push') { select_mutate_push(numbers, &:even?) }
-      x.report('Mutation with Shovel') { select_mutate_shovel(numbers, &:even?) }
-      x.report('Pure with Plus') { select_pure_plus(numbers, &:even?) }
-    end
+Benchmark.ips do |x|
+  x.report('Mutation with Push') { select_mutate_push(numbers, &:even?) }
+  x.report('Mutation with Shovel') { select_mutate_shovel(numbers, &:even?) }
+  x.report('Pure with Plus') { select_pure_plus(numbers, &:even?) }
+end
+```
 
 **Test result**:
 
-    ➜  performance_tests ruby 01_01_19_select_mutation.rb
-    Warming up --------------------------------------
-      Mutation with Push   113.000  i/100ms
-    Mutation with Shovel   123.000  i/100ms
-          Pure with Plus     4.000  i/100ms
-    Calculating -------------------------------------
-      Mutation with Push      1.136k (± 3.1%) i/s -      5.763k in   5.078764s
-    Mutation with Shovel      1.233k (± 1.9%) i/s -      6.273k in   5.089585s
-          Pure with Plus     50.548  (± 5.9%) i/s -    256.000  in   5.081988s
+```ruby
+➜  performance_tests ruby 01_01_19_select_mutation.rb
+Warming up --------------------------------------
+  Mutation with Push   113.000  i/100ms
+Mutation with Shovel   123.000  i/100ms
+      Pure with Plus     4.000  i/100ms
+Calculating -------------------------------------
+  Mutation with Push      1.136k (± 3.1%) i/s -      5.763k in   5.078764s
+Mutation with Shovel      1.233k (± 1.9%) i/s -      6.273k in   5.089585s
+      Pure with Plus     50.548  (± 5.9%) i/s -    256.000  in   5.081988s
+```
 
 ## Speed Differences
 

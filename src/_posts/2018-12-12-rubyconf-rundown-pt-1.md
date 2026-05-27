@@ -3,8 +3,8 @@ layout: "post"
 title: "RubyConf Rundown Pt. 1"
 date: "2018-12-12"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "community"]
+description: "A recap of favorite talks from RubyConf 2018, including Reducing Enumerable and other highlights."
 ---
 
 Wherein we take a look at some of my personal favorite talks of the conference. This will be part one of a few posts recapping RubyConf, and more parts will come out as I have time to watch other videos.

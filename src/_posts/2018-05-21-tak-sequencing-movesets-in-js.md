@@ -3,8 +3,8 @@ layout: "post"
 title: "Tak — Sequencing Movesets in JS"
 date: "2018-05-21"
 categories: []
-tags: []
-description: ""
+tags: ["javascript", "programming"]
+description: "Representing Tak board game moves as functional transformations in JavaScript."
 ---
 
 One of my more favorite pastimes over the last few years has been Tak, from the folks over at Cheapass Games and Elodin Enterprises. It really is a beautiful game, and it presents several fun problems in programming variants of it as well.
@@ -49,20 +49,26 @@ In Tak there are two types of moves, a placement and a movement. Only one can be
 
 Let’s take a look at a placement first:
 
-    a2
+```javascript
+a2
+```
 
 This literally means place a single flat piece at a2.
 
 A wall being placed will have a prefix of S for Standing Stone. A capstone being placed will have a prefix of C for capstone, like such:
 
-    Sa2
-    Ca2
+```javascript
+Sa2
+Ca2
+```
 
 **Movement**
 
 Movement is represented as a number of pieces, a location to move from, a direction, and a series of “drops”:
 
-    3a3>12
+```javascript
+3a3>12
+```
 
 This would indicate that we pick up three pieces from the square a3 and move them to the right (>) leaving one piece on b3 and two pieces on c3.
 
@@ -70,7 +76,9 @@ The directions are + (up), - (down), < (left), > (right).
 
 In an enhanced version of PTN, there’s also the splat (*) which is used to indicate a capstone smashing a wall. This is to make a move easier to undo:
 
-    2a2>11*
+```javascript
+2a2>11*
+```
 
 Without that extra notation it becomes difficult to represent moves as a transformation on the current board, as we’d have to tie ourselves to its current state to know when a wall was smashed or replay up to that same point.
 
@@ -84,18 +92,20 @@ If a player misclicks and wants to step backwards that becomes exceedingly diffi
 
 This spawned the idea for the OpenTak Move Sequence. It takes a series of actions done by the player and represents them as a series of pushes and pops from board positions:
 
-    const ptn = Ptn.parse('3c3>111');
-    ptn.toMoveset();
-    
-    // [{
-    //   action: 'pop', count: 3, x: 2, y: 2
-    // }, {
-    //   action: 'push', count: 1, x: 3, y: 2
-    // }, {
-    //   action: 'push', count: 1, x: 4, y: 2
-    // }, {
-    //   action: 'push', count: 1, x: 5, y: 2
-    // }]
+```javascript
+const ptn = Ptn.parse('3c3>111');
+ptn.toMoveset();
+
+// [{
+//   action: 'pop', count: 3, x: 2, y: 2
+// }, {
+//   action: 'push', count: 1, x: 3, y: 2
+// }, {
+//   action: 'push', count: 1, x: 4, y: 2
+// }, {
+//   action: 'push', count: 1, x: 5, y: 2
+// }]
+```
 
 In this we can represent a movement as popping three pieces from c3, and the following stack drops as increments on the position with push actions. Here’s the kicker though: It’s reversable.
 
@@ -103,15 +113,17 @@ In this we can represent a movement as popping three pieces from c3, and the fol
 
 By taking a moveset, reversing it and swapping pop and push, we’ve undone the move:
 
-    // [{
-    //   action: 'pop', count: 1, x: 5, y: 2
-    // }, {
-    //   action: 'pop', count: 1, x: 4, y: 2
-    // }, {
-    //   action: 'pop', count: 1, x: 3, y: 2
-    // }, {
-    //   action: 'push', count: 3, x: 2, y: 2 
-    // }]
+```javascript
+// [{
+//   action: 'pop', count: 1, x: 5, y: 2
+// }, {
+//   action: 'pop', count: 1, x: 4, y: 2
+// }, {
+//   action: 'pop', count: 1, x: 3, y: 2
+// }, {
+//   action: 'push', count: 3, x: 2, y: 2 
+// }]
+```
 
 It also means that we can get rid of the end of a moveset to “undo” an action as well.
 
@@ -119,13 +131,17 @@ It also means that we can get rid of the end of a moveset to “undo” an actio
 
 If we wanted, we could also inject timing information into the notation:
 
-    {move: "start", player: "white", time: (timestamp)},
-    ...
-    {move: "end", time: (timestamp)},
+```javascript
+{move: "start", player: "white", time: (timestamp)},
+...
+{move: "end", time: (timestamp)},
+```
 
 …or even potentially some meta-information like undos:
 
-    {move: "undo", time: (timestamp)}
+```javascript
+{move: "undo", time: (timestamp)}
+```
 
 and treat them as a series of macros that expand into both an undo moveset and a marker to indicate an undo was done. This allows us to capture more information about the game as it progresses, as well as being able to replay it true to time.
 
@@ -137,11 +153,13 @@ That works fine for move sequences already made, but it also affords us some nic
 
 We can indicate through OTMS the implied direction of a move given the first stack distribution:
 
-    [{
-      action: 'pop', count: 3, x: 2, y: 2
-    }, {
-      action: 'push', count: 1, x: 3, y: 2
-    }]
+```javascript
+[{
+  action: 'pop', count: 3, x: 2, y: 2
+}, {
+  action: 'push', count: 1, x: 3, y: 2
+}]
+```
 
 In this case we know that we have two remaining pieces to play. If the player clicked on (3, 3) we’d also be able to tell that it’s no longer “going right” and counts as an invalid move.
 
@@ -153,7 +171,9 @@ Given that, if we had a board function that took in the action we wanted to take
 
 As far as smashing, we can also add a bit of meta to the notation again:
 
-    action: "push", count: 1, smash: true
+```javascript
+action: "push", count: 1, smash: true
+```
 
 Now when we undo a move we can put the wall back where it was as well.
 

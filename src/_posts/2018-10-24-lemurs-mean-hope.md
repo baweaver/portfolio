@@ -3,8 +3,8 @@ layout: "post"
 title: "Lemurs mean Hope"
 date: "2018-10-24"
 categories: []
-tags: []
-description: ""
+tags: ["autism", "life", "community"]
+description: "The personal story behind the lemur illustrations — autism, mentorship, and how a group of lemurs became a symbol of hope."
 ---
 
 I’ve had people ask me a number of times: “what’s with the lemurs?” It’s a good question, and one I didn’t really have a good answer for at the moment. A question I’ve been thinking about over the last few months, and one that I think I finally have an answer for.

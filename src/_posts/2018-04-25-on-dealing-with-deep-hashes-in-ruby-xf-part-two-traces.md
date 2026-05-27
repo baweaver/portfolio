@@ -3,8 +3,8 @@ layout: "post"
 title: "On Dealing with Deep Hashes in Ruby — XF — Part Two: Traces"
 date: "2018-04-25"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "functional"]
+description: "Part two of the Xf series, exploring Traces for recursively searching and transforming values in deep hashes."
 ---
 
 Xf is a Ruby gem meant for transforming and searching deep hashes, inspired loosely by Lenses in Haskell.
@@ -25,54 +25,64 @@ The thing about Trace is it has to dive to every corner of a hash to get the val
 
 Three tools: yield, next, and recursion:
 
-    **private def recursing_dive(target_hash, &fn)**
-      target_hash.each { |k, v|
-        yield(target_hash, k, v) if match?(
-          target_hash, k, v, [@trace_path](http://twitter.com/trace_path)
-        )
+```ruby
+**private def recursing_dive(target_hash, &fn)**
+  target_hash.each { |k, v|
+    yield(target_hash, k, v) if match?(
+      target_hash, k, v, @trace_path
+    )
 
-        next unless target_hash[k].is_a?(Hash)
-        recursing_dive(target_hash[k], &fn)
-      }
-    **end**
+    next unless target_hash[k].is_a?(Hash)
+    recursing_dive(target_hash[k], &fn)
+  }
+**end**
+```
 
 Now how does this work? First, for reference, @trace_path is a single path:
 
-    class Trace
-      def initialize(trace_path)
-        [**@trace_path](http://twitter.com/trace_path) = trace_path**
-      end
+```ruby
+class Trace
+  def initialize(trace_path)
+    @trace_path = trace_path
+  end
+```
 
 It takes in a target hash to dive into, and it checks if there’s a match as defined here:
 
-    private def match?(hash, key, value, matcher)
-      **matcher === key**
-    end
+```ruby
+private def match?(hash, key, value, matcher)
+  **matcher === key**
+end
+```
 
 So why in the world would I pass in four values if I only need two of them? Well we’ll get to that later, but the short version is inheritance overrides for different types of Trace.
 
 Anyways, if it happens to match (using === because it’s so danged powerful), that value gets yielded to the caller:
 
-    private def recursing_dive(target_hash, &fn)
-      target_hash.each { |k, v|
-        **yield(target_hash, k, v)** if match?(
-          target_hash, k, v, [@trace_path](http://twitter.com/trace_path)
-        )
+```ruby
+private def recursing_dive(target_hash, &fn)
+  target_hash.each { |k, v|
+    **yield(target_hash, k, v)** if match?(
+      target_hash, k, v, @trace_path
+    )
 
-        next unless target_hash[k].is_a?(Hash)
-        recursing_dive(target_hash[k], &fn)
-      }
-    end
+    next unless target_hash[k].is_a?(Hash)
+    recursing_dive(target_hash[k], &fn)
+  }
+end
+```
 
 ## Trace — Getter
 
 So what’s the caller? Well we have both the getter and setter using it, but we’ll start with the getter first:
 
-    def get_value(hash)
-      retrieved_values = []
-      recursing_dive(hash) { |h, k, **v**| **retrieved_values.push(v)** }
-      retrieved_values
-    end
+```ruby
+def get_value(hash)
+  retrieved_values = []
+  recursing_dive(hash) { |h, k, **v**| **retrieved_values.push(v)** }
+  retrieved_values
+end
+```
 
 That’s it? Yep. All it does is dive through the hash and push whatever value it finds that matches into an Array we return back at the end.
 
@@ -80,25 +90,31 @@ That’s it? Yep. All it does is dive through the hash and push whatever value i
 
 Remember how we have access to the hash and key though? That comes in real handy for the setter method:
 
-    def set_value!(hash, value = nil, &fn)
-      recursing_dive(hash) { |h, k, v|
-        **h[k] = block_given? ? yield(v) : value**
-      }
-      
-      hash
-    end
+```ruby
+def set_value!(hash, value = nil, &fn)
+  recursing_dive(hash) { |h, k, v|
+    **h[k] = block_given? ? yield(v) : value**
+  }
+  
+  hash
+end
+```
 
 After it gets down to a matching value, we just overwrite that value with one of two things.
 
 If it was called with a value:
 
-    **Xf.trace(:deep_value).set(5)**
+```ruby
+**Xf.trace(:deep_value).set(5)**
+```
 
 Then every key matching :deep_value will now have its value set to 5.
 
 If it was called with a block:
 
-    **Xf.trace(:age).set { |v| v + 1 }**
+```ruby
+**Xf.trace(:age).set { |v| v + 1 }**
+```
 
 Well happy birthday to everyone in that list!
 
@@ -106,9 +122,11 @@ Note that set_value and get_value are the non-proc versions of the method. I wou
 
 If you’re worried about the mutation of the hash remember I have a habit of using mutation methods to do the dirty work and using clone to mask the side-effects:
 
-    def set_value(hash, value = nil, &fn)
-      set_value!(**deep_clone**(hash), value, &fn)
-    end
+```ruby
+def set_value(hash, value = nil, &fn)
+  set_value!(**deep_clone**(hash), value, &fn)
+end
+```
 
 So if you care about keeping things looking clean you’re set!
 
@@ -118,16 +136,18 @@ Now then, back to our recursing dive
 
 Now that we’ve seen what calls it, when does it decide to keep going?
 
-    private def recursing_dive(target_hash, &fn)
-      target_hash.each { |k, v|
-        yield(target_hash, k, v) if match?(
-          target_hash, k, v, [@trace_path](http://twitter.com/trace_path)
-        )
+```ruby
+private def recursing_dive(target_hash, &fn)
+  target_hash.each { |k, v|
+    yield(target_hash, k, v) if match?(
+      target_hash, k, v, @trace_path
+    )
 
-        **next unless target_hash[k].is_a?(Hash)**
-        recursing_dive(target_hash[k], &fn)
-      }
-    end
+    **next unless target_hash[k].is_a?(Hash)**
+    recursing_dive(target_hash[k], &fn)
+  }
+end
+```
 
 If the target value happens to be a Hash, we know there’s more to explore out there so grab your snorkel because it’s dive time!
 

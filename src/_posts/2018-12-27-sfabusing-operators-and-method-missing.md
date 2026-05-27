@@ -3,8 +3,8 @@ layout: "post"
 title: "Sf — Abusing Operators and Method Missing"
 date: "2018-12-27"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "metaprogramming", "functional"]
+description: "Taking operator abuse further with method_missing and custom proc coercion to build expressive DSLs."
 ---
 
 Now if you thought Mf was bad, that’s just the tip of the proverbial iceberg. Sf is oh so much worse, and that’s what makes this article all the more fun.
@@ -21,19 +21,21 @@ In it I mentioned a very fun idea: Objects with their own idea of what to_proc m
 
 Ampersand coerces an object to a proc, and that means that it calls the to_proc method. The trick is, we can totally define our own. I do this in Qo for pattern matching:
 
-    class Qo
-      def initialize(**kw_matchers)
-        @matchers = kw_matchers
-      end
+```ruby
+class Qo
+  def initialize(**kw_matchers)
+    @matchers = kw_matchers
+  end
 
-      def match(obj)
-        @matchers.all? { |k,v| v === obj.send(k) }
-      end
+  def match(obj)
+    @matchers.all? { |k,v| v === obj.send(k) }
+  end
 
-      def to_proc
-        -> obj { call(obj) }
-      end
-    end
+  def to_proc
+    -> obj { call(obj) }
+  end
+end
+```
 
 Read this article to find out what exactly that’s doing:
 [**For want of Pattern Matching in Ruby — The Creation of Qo**
@@ -49,13 +51,15 @@ Now, as always, method_missing is a powerful and dangerous tool. Use it with dis
 
 We can use method_missing to intercept methods called on an object that it doesn’t know how to respond to. That applies to the singleton class as well:
 
-    def method_missing(method_name, *args, **kwargs, &fn)
-      ...
-    end
+```ruby
+def method_missing(method_name, *args, **kwargs, &fn)
+  ...
+end
 
-    def self.method_missing(method_name, *args, **kwargs, &fn)
-      ...
-    end
+def self.method_missing(method_name, *args, **kwargs, &fn)
+  ...
+end
+```
 
 Normally you only want to intercept a small subset of method names, and call out to super in the case that it’s not what we’re looking for. This isn’t one of those cases.
 
@@ -67,21 +71,23 @@ Next up we have an idea from Java.
 
 A Builder pattern was a way to “build” an object by returning self at the end of a static method call. In Ruby that might look like this:
 
-    class Person
-      def add_name(name)
-        @name = name
-        self
-      end
+```ruby
+class Person
+  def add_name(name)
+    @name = name
+    self
+  end
 
-      def add_age(age)
-        @age = age
-        self
-      end
-    end
+  def add_age(age)
+    @age = age
+    self
+  end
+end
 
-    Person.new
-      .add_name('Test')
-      .add_age(42)
+Person.new
+  .add_name('Test')
+  .add_age(42)
+```
 
 Now I would not recommend actually doing that in Ruby, but it leads us to some other ideas around laziness.
 
@@ -89,34 +95,40 @@ Now I would not recommend actually doing that in Ruby, but it leads us to some o
 
 There’s no given rule that we *have *to do something whenever method_missing is called. We can just lazily hoard operations until it’s time to do something with them:
 
-    class Sf
-      def initialize
-        @operations = []
-      end
+```ruby
+class Sf
+  def initialize
+    @operations = []
+  end
 
-      def method_missing(method_name, *args, **kwargs, &fn)
-        @operations.push(
-          method_name: method_name,
-          args: args,
-          kwargs: kwargs,
-          fn: fn
-        )
+  def method_missing(method_name, *args, **kwargs, &fn)
+    @operations.push(
+      method_name: method_name,
+      args: args,
+      kwargs: kwargs,
+      fn: fn
+    )
 
-        self
-      end
-    end
+    self
+  end
+end
+```
 
 Which means we have an interface which looks quite a bit like a builder pattern:
 
-    Sf.new + 5 + 6
-    => #<Sf:0x00007ff6c7222e30
-     [@operations](http://twitter.com/operations)=
-      [{:method_name=>:+, :args=>[5], :kwargs=>{}, :fn=>nil}, {:method_name=>:+, :args=>[6], :kwargs=>{}, :fn=>nil}]>
+```ruby
+Sf.new + 5 + 6
+=> #<Sf:0x00007ff6c7222e30
+ @operations=
+  [{:method_name=>:+, :args=>[5], :kwargs=>{}, :fn=>nil}, {:method_name=>:+, :args=>[6], :kwargs=>{}, :fn=>nil}]>
+```
 
 Be careful, order of operations *will *bite you here:
 
-    Sf.new + 5 * 6
-    => #<Sf:0x00007ff6c842c860 [@operations](http://twitter.com/operations)=[{:method_name=>:+, :args=>[30], :kwargs=>{}, :fn=>nil}]>
+```ruby
+Sf.new + 5 * 6
+=> #<Sf:0x00007ff6c842c860 @operations=[{:method_name=>:+, :args=>[30], :kwargs=>{}, :fn=>nil}]>
+```
 
 Notice how the args is 30, or rather 5 * 6 because of precedence. Point in case that being too clever can do perfectly normal things that are quite annoying to debug considering you’re looking for some extravagant parser bug.
 
@@ -124,16 +136,18 @@ Notice how the args is 30, or rather 5 * 6 because of precedence. Point in case 
 
 So now that we have those pieces, what are we doing with Sf and coercion? Effectively we’re making a stack of operations to apply to an object we get at a later time, meaning our trusty old reduce method is really handy here:
 
-    def call(object)
-      [@operations](http://twitter.com/operations)
-        .reduce(object) { |obj, method_name:, args:, kwargs:, fn:|
-          if kwargs.empty? 
-            obj.public_send(method_name, *args, &fn)
-          else
-            obj.public_send(method_name, *args, **kwargs, &fn)
-          end
-        }
-    end
+```ruby
+def call(object)
+  @operations
+    .reduce(object) { |obj, method_name:, args:, kwargs:, fn:|
+      if kwargs.empty? 
+        obj.public_send(method_name, *args, &fn)
+      else
+        obj.public_send(method_name, *args, **kwargs, &fn)
+      end
+    }
+end
+```
 
 Now we can apply each one of those stacked lazy methods to an object one by one until we get back an object at the end of our transformation!
 
@@ -151,15 +165,19 @@ I’ve added a few things along the way, like defining common operators instead 
 
 …which means I can totally get away with code like this:
 
-    Sf.dig(:a, :b).gsub('a') { '1' }.to_i.call(a: {b: 'a'})
-    => 1
+```ruby
+Sf.dig(:a, :b).gsub('a') { '1' }.to_i.call(a: {b: 'a'})
+=> 1
+```
 
 Since those can be dropped anywhere, you could theoretically use it on any large JSON or structure you need to map over:
 
-    users_json.map(&Sf.dig(:address, :street, :number))
+```ruby
+users_json.map(&Sf.dig(:address, :street, :number))
 
-    # or
-    users_json.map(&Sf.slice(:name, :email))
+# or
+users_json.map(&Sf.slice(:name, :email))
+```
 
 There’s a lot of possibility out there! Really I’m not even entirely sure what all this type of thing can do, but that’s what makes it so fun to play with.
 

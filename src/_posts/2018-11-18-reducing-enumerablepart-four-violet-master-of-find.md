@@ -4,8 +4,8 @@ title: "Reducing Enumerable — Part Four: Violet, Master of Find"
 series: "reducing-enumerable"
 date: "2018-11-18"
 categories: []
-tags: []
-description: ""
+tags: ["ruby", "functional", "beginners"]
+description: "Part four of Reducing Enumerable — Violet teaches Red how to implement find using reduce."
 ---
 
 This brings us to part four of Reducing Enumerable where we meet Violet, the master of Find.
