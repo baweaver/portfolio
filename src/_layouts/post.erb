@@ -71,13 +71,13 @@ layout: default
 <% if series %>
 <div class="series-sticky">
   <% if series["prev"] %>
-    <a href="<%= relative_url series["prev"].relative_url %>">← Prev</a>
+    <a href="<%= series["prev"].relative_url %>">← Prev</a>
   <% else %>
     <span class="disabled">← Prev</span>
   <% end %>
   <span class="series-pos"><%= series["current_index"] + 1 %> of <%= series["posts"].length %></span>
   <% if series["next"] %>
-    <a href="<%= relative_url series["next"].relative_url %>">Next →</a>
+    <a href="<%= series["next"].relative_url %>">Next →</a>
   <% else %>
     <span class="disabled">Next →</span>
   <% end %>

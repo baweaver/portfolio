@@ -61,7 +61,7 @@ title: Home
     </div>
     <div class="latest-grid">
       <% collections.posts.resources.select { |p| p.data.date }.sort_by { |p| p.data.date }.reverse.first(3).each do |post| %>
-        <a href="<%= relative_url post.relative_url %>" class="latest-card">
+        <a href="<%= post.relative_url %>" class="latest-card">
           <span class="latest-card-date"><%= post.data.date.strftime("%b %d, %Y") %></span>
           <h3><%= post.data.title %></h3>
           <p><%= post.data.description&.slice(0, 100) %></p>
