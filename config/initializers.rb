@@ -15,10 +15,10 @@
 # handles, etc., take a look at `src/_data/site_metadata.yml`
 
 Bridgetown.configure do |config|
-  url ""
+  url "https://baweaver.com"
   template_engine "erb"
   permalink "pretty"
-  base_path ENV["BRIDGETOWN_ENV"] == "production" ? "/portfolio" : ""
+  base_path ""
 
   collections do
     posts do
