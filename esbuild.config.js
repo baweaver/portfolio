@@ -32,8 +32,10 @@ import build from "./config/esbuild.defaults.js"
  * @typedef { import("esbuild").BuildOptions } BuildOptions
  * @type {BuildOptions}
  */
+const basePath = process.env.BRIDGETOWN_ENV === "production" ? "/portfolio" : "";
+
 const esbuildOptions = {
-  publicPath: "/portfolio/_bridgetown/static",
+  publicPath: `${basePath}/_bridgetown/static`,
   plugins: [
     // add new plugins here...
   ],

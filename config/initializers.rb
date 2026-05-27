@@ -18,7 +18,7 @@ Bridgetown.configure do |config|
   url ""
   template_engine "erb"
   permalink "pretty"
-  base_path "/portfolio"
+  base_path ENV["BRIDGETOWN_ENV"] == "production" ? "/portfolio" : ""
 
   collections do
     posts do

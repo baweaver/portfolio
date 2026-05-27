@@ -5,8 +5,7 @@ Bridgetown.load_tasks
 task :default => :build
 
 desc "Build frontend and site"
-task :build do
-  sh "node esbuild.config.js"
+task :build => ["frontend:build"] do
   Bridgetown::Commands::Build.start
 end
 
