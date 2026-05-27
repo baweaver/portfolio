@@ -5,7 +5,8 @@ async function init() {
   const el = document.getElementById("post-search");
   if (!el) return;
 
-  const res = await fetch("/search.json");
+  const basePath = document.querySelector('meta[name="base-path"]')?.content || "";
+  const res = await fetch(`${basePath}/search.json`);
   const posts = await res.json();
 
   new TomSelect(el, {

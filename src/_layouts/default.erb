@@ -6,7 +6,7 @@
 <body>
   <div class="shell">
     <%= render "sidebar" %>
-    <img src="/images/vertical_divider.png" alt="" class="divider" />
+    <img src="<%= relative_url "/images/vertical_divider.png" %>" alt="" class="divider" />
     <main class="main">
       <%= yield %>
     </main>

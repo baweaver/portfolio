@@ -47,7 +47,7 @@ a:hover { color: var(--dusk-blue); }
   bottom: 0;
   width: calc(var(--sidebar-width) + 200px);
   background-color: #0c1432;
-  background-image: url("/images/left_bar_expanded.png");
+  background-image: url("/portfolio/images/left_bar_expanded.png");
   background-position: right top;
   background-size: cover;
   background-repeat: no-repeat;
