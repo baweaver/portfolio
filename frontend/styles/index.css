@@ -87,6 +87,12 @@ a:hover { color: var(--dusk-blue); }
 }
 
 .brand { margin-bottom: 16px; text-align: center; }
+.brand a { text-decoration: none; color: inherit; }
+
+.tag-section { margin-bottom: 24px; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { font-size: 12px; padding: 4px 10px; border: 1px solid var(--mystic-purple); color: var(--mystic-purple); background: rgba(74, 60, 122, 0.06); text-decoration: none; border-radius: 3px; }
+.tag:hover { background: rgba(74, 60, 122, 0.15); }
 
 .lantern {
   display: block;

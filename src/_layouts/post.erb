@@ -27,6 +27,16 @@ layout: default
       <a href="/about" class="author-link">More About Me →</a>
     </div>
     <% series = post_series(resource) %>
+    <% if resource.data.tags&.any? %>
+      <div class="tag-section">
+        <h3 class="sidebar-heading">Tags</h3>
+        <div class="tag-list">
+          <% resource.data.tags.each do |tag| %>
+            <a href="<%= relative_url "/tags/#{tag.downcase.gsub(/[^a-z0-9]+/, "-").gsub(/-+$/, "")}/" %>" class="tag"><%= tag %></a>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
     <% if series %>
       <div class="series-nav">
         <h3 class="sidebar-heading">In This Series</h3>
