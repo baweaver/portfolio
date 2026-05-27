@@ -72,8 +72,11 @@ a:hover { color: var(--dusk-blue); }
 .hero-img { width: 100%; height: auto; display: block; mix-blend-mode: multiply; opacity: .85; }
 
 /* Banner */
-.banner { display: grid; grid-template-columns: 1fr 1fr; background: url('/images/tgts_velour_tile_paper.png') repeat; color: #f7f1e8; padding: 48px; border-left: 3px solid var(--dusk-blue); border-bottom: 3px solid var(--dusk-blue); }
+.banner { display: grid; grid-template-columns: 1fr 1fr; background: url('/images/tgts_velour_tile_paper.png') repeat; color: #f7f1e8; padding: 48px; border-left: 3px solid var(--dusk-blue); border-bottom: 3px solid var(--dusk-blue); position: relative; overflow: hidden; }
+.banner::after { content: ""; position: absolute; right: -20px; top: -20px; bottom: -20px; width: 340px; background: url('/images/vines.png') no-repeat right center; background-size: contain; opacity: 0.15; pointer-events: none; transform: rotate(15deg); }
 .banner-icons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding-right: 32px; border-right: 1px solid rgba(247,241,232,.2); }
+.banner-icons > div { display: flex; flex-direction: column; align-items: center; padding-bottom: 16px; border-bottom: 1px solid rgba(120, 90, 180, 0.5); }
+.banner-icons > div .banner-label { min-height: 2.4em; display: flex; align-items: center; }
 .banner-text-area { display: flex; flex-direction: column; justify-content: center; padding: 8px 0 8px 32px; }
 .banner-text-area p { font-size: 14px; line-height: 1.7; color: rgba(247,241,232,.85); margin-bottom: 24px; }
 .banner-cta { display: inline-flex; align-items: center; gap: 10px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: #f7f1e8; text-decoration: none; }
