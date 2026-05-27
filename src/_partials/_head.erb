@@ -3,6 +3,22 @@
 <meta name="base-path" content="<%= site.base_path %>" />
 <title><%= resource.data.title ? "#{resource.data.title} | baweaver" : "baweaver" %></title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Caveat:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Kalam:wght@300;400;700&display=swap" />
+<% if Bridgetown.env.development? %>
+<script>
+// Monkey-patch EventSource to track and close on navigation
+(function() {
+  const OrigES = EventSource;
+  window.EventSource = function(url) {
+    const es = new OrigES(url);
+    window._liveReloadES = es;
+    return es;
+  };
+  window.addEventListener("pagehide", () => {
+    if (window._liveReloadES) window._liveReloadES.close();
+  });
+})();
+</script>
 <%= live_reload_dev_js %>
+<% end %>
 <link rel="stylesheet" href="<%= asset_path "styles/index.css" %>" />
 <script src="<%= asset_path "javascript/index.js" %>" defer></script>
