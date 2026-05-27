@@ -1,0 +1,31 @@
+---
+layout: default
+title: Writing
+---
+<div class="writing-layout">
+  <div class="writing-main">
+    <h1 class="page-title">Writing</h1>
+    <p class="page-subtitle">Essays on engineering, leadership, Ruby, and systems thinking.</p>
+    <div class="post-search-wrapper">
+      <select id="post-search" placeholder="Search posts..."></select>
+    </div>
+    <div class="post-list">
+      <% collections.posts.resources.select { |p| p.data.date }.sort_by { |p| p.data.date }.reverse.each do |post| %>
+        <a href="<%= post.relative_url %>" class="post-list-item">
+          <span class="post-list-meta"><%= post.data.date.strftime("%b %d, %Y") %></span>
+          <h2><%= post.data.title %></h2>
+        </a>
+      <% end %>
+    </div>
+  </div>
+  <aside class="writing-sidebar">
+    <h3 class="sidebar-heading">Series</h3>
+    <% series_list.each do |s| %>
+      <div class="series-card">
+        <strong class="series-title"><%= s["title"] %></strong>
+        <span class="series-meta"><%= s["count"] %> posts · Last updated <%= s["latest_date"].strftime("%b %Y") %></span>
+        <a href="<%= s["latest_post"].relative_url %>" class="series-link">Latest →</a>
+      </div>
+    <% end %>
+  </aside>
+</div>

@@ -1,0 +1,60 @@
+---
+layout: default
+---
+<div class="post-layout">
+  <article class="blog-post">
+    <nav class="breadcrumb">
+      <a href="/">Home</a> / <a href="/writing">Writing</a> / Post
+    </nav>
+    <div class="post-meta">
+      <% if resource.data.tags&.any? %>
+        <span class="post-category"><%= resource.data.tags.first %></span>
+      <% end %>
+      <span class="post-date"><%= resource.data.date.strftime("%B %d, %Y") %></span>
+    </div>
+    <h1 class="post-title"><%= resource.data.title %></h1>
+    <hr class="title-rule" />
+    <div class="post-body">
+      <%= yield %>
+    </div>
+  </article>
+  <aside class="post-sidebar">
+    <div class="author-card">
+      <h3 class="sidebar-heading">About the Author</h3>
+      <img src="/images/profile.jpeg" alt="Brandon Weaver" class="author-photo" />
+      <strong class="author-name">Brandon Weaver</strong>
+      <p class="author-bio">I help organizations turn complex problems into robust, elegant software. From backend systems to developer experience, I build solutions that are reliable, scalable, and a joy to work with.</p>
+      <a href="/about" class="author-link">More About Me →</a>
+    </div>
+    <% series = post_series(resource) %>
+    <% if series %>
+      <div class="series-nav">
+        <h3 class="sidebar-heading">In This Series</h3>
+        <strong class="series-title"><%= series["title"] %></strong>
+        <span class="series-meta"><%= series["current_index"] + 1 %> of <%= series["posts"].length %></span>
+        <div class="series-arrows">
+          <% if series["prev"] %>
+            <a href="<%= series["prev"].relative_url %>" class="series-arrow">← Previous</a>
+          <% else %>
+            <span class="series-arrow disabled">← Previous</span>
+          <% end %>
+          <% if series["next"] %>
+            <a href="<%= series["next"].relative_url %>" class="series-arrow">Next →</a>
+          <% else %>
+            <span class="series-arrow disabled">Next →</span>
+          <% end %>
+        </div>
+        <details class="series-all">
+          <summary>All posts in series</summary>
+          <ol class="series-posts">
+            <% series["posts"].each do |p| %>
+              <li class="<%= 'current' if p.relative_url == resource.relative_url %>">
+                <a href="<%= p.relative_url %>"><%= short_title(p, series["title"]) %></a>
+              </li>
+            <% end %>
+          </ol>
+        </details>
+      </div>
+    <% end %>
+  </aside>
+</div>

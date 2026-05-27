@@ -1,0 +1,323 @@
+---
+layout: "post"
+title: "A Scoop of Sorbet - First Impressions"
+date: "2019-06-21"
+categories: ["ruby", "statictyping"]
+tags: ["ruby", "statictyping", "sorbet"]
+description: "Stripe just released a new Ruby Static Typing library named Sorbet, let's take a look into it"
+---
+
+![](/images/posts/2019-06-21-a-scoop-of-sorbet-first-impressions-f30/img-f7a10e3f.jpeg)
+
+Stripe just released a new gem for static typing in Ruby called Sorbet after a long period of teasing at it publicly at conferences like [Ruby Kaigi](https://rubykaigi.org/2019/presentations/jez.html).
+
+Let's take a look into it and see what we find. These will be my first impressions reading through the library, which may change with use and experimentation. Your experiences may be different, and you should write about them too!
+
+# [Homepage](https://sorbet.org/)
+
+
+Stripe being Stripe, the homepage is nice, clean, and to the point. I kinda want to make a purple site now. Anyways, design aside...
+
+We start off with a basic example:
+
+```ruby
+# typed: true
+extend T::Sig
+
+sig {params(name: String).returns(Integer)}
+def main(name)
+  puts "Hello, #{name}!"
+  name.length
+end
+
+main("Sorbet") # ok!
+main()   # error: Not enough arguments provided
+man("")  # error: Method `man` does not exist
+```
+
+## A Taste of Sorbet
+
+The first thing I notice here is the head comment of `typed: true`. I wonder if that's a compiler flag and is required in every file that runs it. I'd guess so, somewhat like frozen string literals in Ruby.
+
+We're extending from `T::Sig` which I would assume to be the type signature methods.
+
+`sig` itself takes a block. Not fond of the style of no-spacing it, as that's a bit hard to read. Adding a few spaces makes it easier to parse visually:
+
+```ruby
+sig { params(name: String).returns(Integer) }
+def main(name)
+  puts "Hello, #{name}!"
+  name.length
+end
+```
+
+But that's more of a personal preference than anything.
+
+### Issues
+
+I'd like to be able to copy and paste that first example and see it run as expected. Given that we're not including anything from `sorbet` yet, it will fail as-is. A five second to action, if you will, has quite the impact. I think it's possible but may encumber that first example, so it's understandable it doesn't work quite that simply.
+
+## Get started quickly
+
+I'm going to try this in a project that has a barebones `Gemfile` and no other code, just to see what happens. If that fails, I'll switch over to one of my toy gems to see how it works on a project.
+
+We'll start in a new barebones project called `strawberry_sorbet`, with a `Gemfile`:
+
+```ruby
+# Gemfile
+
+source 'https://rubygems.org'
+
+gem 'sorbet', group: :development
+gem 'sorbet-runtime'
+```
+
+Then install that:
+
+```bash
+➜  strawberry_sorbet git:(master) ✗ bundle
+Using bundler 2.0.1
+Using sorbet-static 0.4.4271 (universal-darwin-17)
+Using sorbet 0.4.4271
+Using sorbet-runtime 0.4.4271
+Bundle complete! 2 Gemfile dependencies, 4 gems now installed.
+Use `bundle info [gemname]` to see where a bundled gem is installed.
+```
+
+Now let's see Sorbet go with `srb init`:
+
+```bash
+➜  strawberry_sorbet git:(master) ✗ srb init
+
+👋 Hey there!
+
+This script will get this project ready to use with Sorbet by creating a
+sorbet/ folder for your project. It will contain:
+
+- a config file
+- a bunch of 'RBI files'
+
+RBI stands for 'Ruby Interface'; these files define classes, methods, and
+constants that exist, but which Sorbet doesn't always know about.
+
+⚠️  Heads up:
+
+To set up your project, this script will take two potentially destructive
+actions:
+
+1.  It will require every file in your project. Specifically, every script in
+    your project will be run, unless that script checks if __FILE__ == $PROGRAM_NAME
+    before running any code, or has the magic comment # typed: ignore in it.
+
+2.  It will add a comment to the top of every file (like # typed: false or
+    # typed: true, depending on how many errors were found in that file.)
+
+❔ Would you like to continue? [Y/n]
+```
+
+I kinda wonder if there's a `-y` flag to bypass this for projects that know they want it and know said risks.
+
+`if __FILE__ == $PROGRAM_NAME` is a throwback, haven't seen that in a while.
+
+Let's see it run then!
+
+```markdown
+❔ Would you like to continue? [Y/n] Y
+
+Generating: sorbet/config
+Generating: sorbet/rbi/sorbet-typed/
+Generating: sorbet/rbi/gems/
+Generating: sorbet/rbi/hidden-definitions/
+// snipped
+Generating split RBIs into sorbet/rbi/hidden-definitions/
+Generating: sorbet/rbi/todo.rbi
+
+✅ Done!
+
+This project is now set up for use with Sorbet. The sorbet/ folder should exist
+and look something like this:
+
+    sorbet/
+    ├──  config                      # Default options to passed to sorbet on every run
+    └──  rbi/
+        ├──  sorbet-typed/           # Community writen type definition files for your gems
+        ├──  gems/                   # Autogenerated type definitions for your gems (from reflection)
+        ├──  hidden-definitions/     # All definitions that exist at runtime, but Sorbet couldn't see statically
+        └──  todo.rbi                # Constants which were still missing, even after the three steps above.
+
+Please check this whole folder into version control.
+
+➡️   What's next?
+
+Up to you! First things first, you'll probably want to typecheck your project:
+
+    srb tc
+
+Other than that, it's up to you!
+We recommend skimming these docs to get a feel for how to use Sorbet:
+
+- Gradual Type Checking (https://sorbet.org/docs/gradual)
+- Enabling Static Checks (https://sorbet.org/docs/static)
+- RBI Files (https://sorbet.org/docs/rbi)
+
+If instead you want to explore your files locally, here are some things to try:
+
+- Upgrade a file marked # typed: false to # typed: true.
+  Then, run srb tc and try to fix any errors.
+- Add signatures to your methods with `sig`.
+  For how, read: https://sorbet.org/docs/sigs
+- Check whether things that show up in the TODO RBI file actually exist in your project.
+  It's possible some of these constants are typos.
+- Upgrade a file marked # typed: ignore to # typed: false.
+  Then, run srb tc and try to fix any errors.
+
+🙌  Please don't hesitate to give us your feedback!
+```
+
+Now that's a good deal of text, let's take a look into it. We'll ignore a lot of the generated files for now, that's likely the subject of an entire writeup of its own.
+
+### Folder Layout
+
+
+```markdown
+This project is now set up for use with Sorbet. The sorbet/ folder should exist
+and look something like this:
+
+    sorbet/
+    ├──  config                      # Default options to passed to sorbet on every run
+    └──  rbi/
+        ├──  sorbet-typed/           # Community writen type definition files for your gems
+        ├──  gems/                   # Autogenerated type definitions for your gems (from reflection)
+        ├──  hidden-definitions/     # All definitions that exist at runtime, but Sorbet couldn't see statically
+        └──  todo.rbi                # Constants which were still missing, even after the three steps above.
+```
+
+Looking at the tree, it's nice to have that visually represented. There's a [small typo there (`writen -> written`)](https://github.com/sorbet/sorbet/pull/967), but not a hard fix.
+
+The community written definitions and autogenerated gem type definitions are interesting, I'll have to look into that as well later.
+
+### Version Control
+
+```markdown
+Please check this whole folder into version control.
+```
+
+It's noted that this should be checked into version control. Given that this is a schema-like system, that'd be a good idea to make sure you don't lose typing information. Not sure how much you want to manually edit things in this folder yet, but I would assume some at the least.
+
+### Next Steps
+
+There are some next steps right after:
+
+```markdown
+➡️   What's next?
+
+Up to you! First things first, you'll probably want to typecheck your project:
+
+    srb tc
+```
+
+#### The Homepage Example
+
+So I have the example problem stored with the failing lines commented out for later, let's see what it does:
+
+```ruby
+# 01_homepage.rb
+
+# typed: strong
+
+require 'sorbet'
+
+extend T::Sig
+
+sig {params(name: String).returns(Integer)}
+def main(name)
+  puts "Hello, #{name}!"
+  name.length
+end
+
+main("Sorbet") # ok!
+# main()   # error: Not enough arguments provided
+# man("")  # error: Method `man` does not exist
+```
+
+Running `srb tc` on the working file yields:
+
+```bash
+➜  strawberry_sorbet git:(master) ✗ srb tc
+No errors! Great job.
+```
+
+#### Inducing Errors
+
+Let's uncomment that first error line:
+
+```ruby
+main()   # error: Not enough arguments provided
+```
+
+...and running it again gives us:
+
+```ruby
+➜  strawberry_sorbet git:(master) ✗ srb tc
+01_homepage.rb:14: Not enough arguments provided for method Object#main. Expected: 1, got: 0 https://srb.help/7004
+    14 |main()   # error: Not enough arguments provided
+        ^^^^^^
+    01_homepage.rb:8: Object#main defined here
+     8 |def main(name)
+        ^^^^^^^^^^^^^^
+Errors: 1
+```
+
+Oh that's nice. Not only did it trace out that error that was mentioned on the homepage, but it also gave us the surrounding context of the method that was called so we could potentially see what went wrong there.
+
+I wonder what happens if we pass an invalid type to it:
+
+```ruby
+main(42)
+```
+
+We'll get:
+
+```ruby
+01_homepage.rb:14: Integer(42) does not match String for argument name https://srb.help/7002
+    14 |main(42)
+        ^^^^^^^^
+    01_homepage.rb:7: Method Object#main has specified name as String
+     7 |sig {params(name: String).returns(Integer)}
+                    ^^^^
+  Got Integer(42) originating from:
+    01_homepage.rb:14:
+    14 |main(42)
+             ^^
+Errors: 1
+```
+
+So we get the value, the type, the method type signature, and some other details about tracing what exactly went wrong. They really did an excellent job of exposing context, and make this particular bug easy to track down and isolate.
+
+We'll have to dig into this more later.
+
+### Designed to be Interactive
+
+I'd had the pleasure some time ago to be chatting with Matz about some of his dreams for Ruby 3, and high on his list was an idea of a language server that could interact with editors and allow for cleaner refactoring and coding in general.
+
+To see it become real is something else entirely.
+
+It would be nice to have a link here to how to set up said editors, as I'd be clicking it quite quickly to see how it works.
+
+## First Impression Opinions?
+
+This reminds me a lot of Rust and some other languages, and it feels like Static typing done right that gives you information rather than being overtly pedantic.
+
+My opinions may change as I play with this more, and play I shall. The first items I intend to go about are:
+
+1. How `===` works with this
+2. How union or product types might work
+3. If the system can handle interfaces like `is_a?(Enumerable)`
+4. How the language server works
+5. How this might be used in conjunction with Whitequark's Parser
+6. If this can be used with Rubocop for refactoring / codemods
+7. If this could potentially be used for Category Theory specs like Fantasy Land in Ruby
+
+I expect there will be more as I have more chances to play with this, but that's it for a first read-through.
+
+What are you curious about learning in Sorbet?

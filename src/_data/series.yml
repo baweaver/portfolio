@@ -1,0 +1,43 @@
+- id: lets-read-eloquent-ruby
+  title: "Let's Read: Eloquent Ruby"
+  prefix: "Let's Read - Eloquent Ruby"
+
+- id: lets-read-polished-ruby
+  title: "Let's Read: Polished Ruby Programming"
+  prefix: "Let's Read - Polished Ruby Programming"
+
+- id: understanding-ruby
+  title: "Understanding Ruby"
+  prefix: "Understanding Ruby"
+
+- id: beyond-senior
+  title: "Beyond Senior"
+  prefix: "Beyond Senior"
+
+- id: tales-autistic-developer
+  title: "Tales of the Autistic Developer"
+  prefix: "Tales of the Autistic Developer"
+
+- id: tales-ruby-grimoire
+  title: "Tales of the Ruby Grimoire"
+  prefix: "Tales of the Ruby Grimoire"
+
+- id: advent-ruby-3
+  title: "Advent of Ruby 3.0"
+  prefix: "Advent of Ruby 3.0"
+
+- id: reducing-enumerable
+  title: "Reducing Enumerable"
+  prefix: "Reducing Enumerable"
+
+- id: asts-in-ruby
+  title: "ASTs in Ruby"
+  prefix: "ASTs in Ruby"
+
+- id: decorating-ruby
+  title: "Decorating Ruby"
+  prefix: "Decorating Ruby"
+
+- id: functional-programming-ruby
+  title: "Functional Programming in Ruby"
+  prefix: "Functional Programming in Ruby"

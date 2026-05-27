@@ -1,0 +1,6 @@
+---
+permalink: /search.json
+---
+<%== collections.posts.resources.select { |p| p.data.date }.sort_by { |p| p.data.date }.reverse.map { |post|
+  { title: post.data.title, url: post.relative_url, date: post.data.date.strftime("%b %d, %Y"), tags: post.data.tags || [] }
+}.to_json %>

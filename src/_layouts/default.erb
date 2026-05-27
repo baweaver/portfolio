@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%= render "head" %>
+</head>
+<body>
+  <div class="shell">
+    <%= render "sidebar" %>
+    <img src="/images/vertical_divider.png" alt="" class="divider" />
+    <main class="main">
+      <%= yield %>
+    </main>
+  </div>
+  <%= render "footer" %>
+</body>
+</html>
