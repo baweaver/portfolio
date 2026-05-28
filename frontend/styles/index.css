@@ -538,3 +538,6 @@ a:hover { color: var(--dusk-blue); }
 .tab-panel.active { display: block; }
 
 .path-nav-section { margin-top: 24px; }
+.related-posts { margin-top: 24px; }
+.related-post-link { display: block; font-size: 13px; line-height: 1.5; color: var(--mystic-purple); text-decoration: none; margin-bottom: 8px; }
+.related-post-link:hover { color: var(--dusk-blue); }

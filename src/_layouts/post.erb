@@ -67,6 +67,7 @@ layout: default
       </div>
     <% end %>
     <%= render Shared::PathNav.new(resource: resource, site: site) %>
+    <%= render Shared::RelatedPosts.new(resource: resource, site: site) %>
   </aside>
 </div>
 <% if series %>
