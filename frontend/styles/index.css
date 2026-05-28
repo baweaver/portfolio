@@ -517,6 +517,9 @@ a:hover { color: var(--dusk-blue); }
   .series-sticky .disabled { color: rgba(247,241,232,.3); }
   .back-to-top { position: fixed; bottom: 20px; right: 20px; z-index: 40; background: var(--nightfall); color: #f7f1e8; border: 1px solid rgba(247,241,232,.2); border-radius: 50%; width: 44px; height: 44px; display: none; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
   .back-to-top.visible { display: flex; }
+
+  .writing-tabs { overflow-x: auto; }
+  .path-nav-section { margin-top: 16px; }
 }
 
 @media (min-width: 761px) {
@@ -541,3 +544,27 @@ a:hover { color: var(--dusk-blue); }
 .related-posts { margin-top: 24px; }
 .related-post-link { display: block; font-size: 13px; line-height: 1.5; color: var(--mystic-purple); text-decoration: none; margin-bottom: 8px; }
 .related-post-link:hover { color: var(--dusk-blue); }
+
+.talk-item { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; padding: 16px 0; border-bottom: 1px solid var(--warm-stone); text-decoration: none; color: inherit; }
+.talk-item:hover .talk-title { color: var(--mystic-purple); }
+.talk-title { font-size: 15px; font-weight: 600; color: var(--ink); margin: 0; flex: 1; }
+.talk-meta { text-align: right; flex-shrink: 0; }
+.talk-year { font-size: 13px; font-weight: 600; color: var(--mystic-purple); }
+.talk-venue { font-size: 12px; color: var(--graphite); margin-left: 8px; }
+.talk-item .tag-list { width: 100%; margin-top: 6px; }
+.talk-list { display: flex; flex-direction: column; }
+.talk-filter-tag { cursor: pointer; }
+.talk-filter-tag.active { background: var(--mystic-purple); color: #f7f1e8; border-color: var(--mystic-purple); }
+.talk-series-filter { cursor: pointer; transition: border-color .2s; border-left: 3px solid transparent; padding-left: 12px; }
+.talk-series-filter.active { border-left-color: var(--mystic-purple); }
+.talk-series-filter.active .series-title { color: var(--mystic-purple); }
+.talk-series-select { display: none; width: 100%; padding: 10px 14px; font-size: 14px; font-family: var(--font-body); border: 1px solid var(--warm-stone); border-radius: 4px; background: var(--paper); color: var(--ink); margin-bottom: 20px; }
+
+@media (max-width: 760px) {
+  .talk-item { flex-direction: column; padding: 12px 0; }
+  .talk-title { flex: none; }
+  .talk-meta { text-align: left; order: 1; }
+  .talk-item .tag-list { order: 2; }
+  .speaking-layout .writing-sidebar { display: none; }
+  .talk-series-select { display: block; }
+}

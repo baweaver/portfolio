@@ -2,21 +2,119 @@
 layout: default
 title: Speaking
 ---
-<div class="page">
-  <h1 class="page-title">Speaking</h1>
-  <p class="page-subtitle">Conference talks on Ruby, ASTs, pattern matching, AI-assisted engineering, and systems thinking.</p>
-  <div class="post-list">
-    <div class="post-list-item"><h2>RubyConf 2024 Keynote</h2><span class="post-list-meta">Chicago, IL</span></div>
-    <div class="post-list-item"><h2>RubyKaigi 2024</h2><span class="post-list-meta">Okinawa, Japan</span></div>
-    <div class="post-list-item"><h2>Rocky Mountain Ruby 2025 Keynote</h2><span class="post-list-meta">Boulder, CO</span></div>
-    <div class="post-list-item"><h2>RailsConf 2023</h2><span class="post-list-meta">Atlanta, GA</span></div>
-    <div class="post-list-item"><h2>RailsConf 2022</h2><span class="post-list-meta">Portland, OR</span></div>
-    <div class="post-list-item"><h2>RubyConf 2021</h2><span class="post-list-meta">Denver, CO</span></div>
-    <div class="post-list-item"><h2>RubyConf AU 2020</h2><span class="post-list-meta">Melbourne, Australia</span></div>
+<div class="writing-layout speaking-layout">
+  <div class="writing-main">
+    <h1 class="page-title">Speaking</h1>
+    <p class="page-subtitle">I speak at conferences on Ruby, pattern matching, ASTs, AI-assisted engineering, autism in tech, and the craft of illustrated storytelling. Interested in having me speak? <a href="/contact">Get in touch</a>.</p>
+
+    <select class="talk-series-select" id="talk-series-select">
+      <option value="all">All Talk Series</option>
+      <% site.data.talks["series"].each do |s| %>
+      <option value="<%= s["id"] %>"><%= s["title"] %></option>
+      <% end %>
+    </select>
+
+    <% talks = site.data.talks["talks"] %>
+    <% upcoming = talks.select { |t| t["upcoming"] } %>
+    <% keynotes = talks.select { |t| t["keynote"] && !t["upcoming"] } %>
+    <% regular = talks.reject { |t| t["keynote"] || t["upcoming"] } %>
+
+    <% if upcoming.any? %>
+    <h2 class="section-heading">Upcoming</h2>
+    <div class="talk-list" id="talk-list">
+      <% upcoming.each do |talk| %>
+      <a href="<%= talk["url"] %>" class="talk-item" target="_blank" rel="noopener noreferrer" data-tags="<%= talk["tags"].join(" ") %>" data-series="<%= talk["series"] %>">
+        <h3 class="talk-title"><%= talk["title"] %></h3>
+        <div class="talk-meta">
+          <span class="talk-year"><%= talk["year"] %></span>
+          <span class="talk-venue"><%= talk["event"] %></span>
+        </div>
+        <div class="tag-list"><% talk["tags"].each do |tag| %><span class="tag talk-filter-tag" data-filter="<%= tag %>"><%= tag %></span><% end %></div>
+      </a>
+      <% end %>
+    </div>
+    <% end %>
+
+    <h2 class="section-heading mt-24">Keynotes</h2>
+    <div class="talk-list">
+      <% keynotes.each do |talk| %>
+      <a href="<%= talk["url"] %>" class="talk-item" target="_blank" rel="noopener noreferrer" data-tags="<%= talk["tags"].join(" ") %>" data-series="<%= talk["series"] %>">
+        <h3 class="talk-title"><%= talk["title"] %></h3>
+        <div class="talk-meta">
+          <span class="talk-year"><%= talk["year"] %></span>
+          <span class="talk-venue"><%= talk["event"] %></span>
+        </div>
+        <div class="tag-list"><% talk["tags"].each do |tag| %><span class="tag talk-filter-tag" data-filter="<%= tag %>"><%= tag %></span><% end %></div>
+      </a>
+      <% end %>
+    </div>
+
+    <h2 class="section-heading mt-24">Conference Talks</h2>
+    <div class="talk-list">
+      <% regular.each do |talk| %>
+      <a href="<%= talk["url"] %>" class="talk-item" target="_blank" rel="noopener noreferrer" data-tags="<%= talk["tags"].join(" ") %>" data-series="<%= talk["series"] %>">
+        <h3 class="talk-title"><%= talk["title"] %></h3>
+        <div class="talk-meta">
+          <span class="talk-year"><%= talk["year"] %></span>
+          <span class="talk-venue"><%= talk["event"] %></span>
+        </div>
+        <div class="tag-list"><% talk["tags"].each do |tag| %><span class="tag talk-filter-tag" data-filter="<%= tag %>"><%= tag %></span><% end %></div>
+      </a>
+      <% end %>
+    </div>
+
+    <p class="mt-24">
+      <a href="https://www.rubyevents.org/profiles/baweaver" target="_blank" rel="noopener noreferrer" class="external-link">
+        Full history on RubyEvents →
+      </a>
+    </p>
   </div>
-  <p class="mt-24">
-    <a href="https://www.rubyevents.org/profiles/baweaver" target="_blank" rel="noopener noreferrer" class="external-link">
-      View all talks on RubyEvents →
-    </a>
-  </p>
+
+  <aside class="writing-sidebar">
+    <h3 class="sidebar-heading">Talk Series</h3>
+    <% site.data.talks["series"].each do |s| %>
+      <% series_talks = talks.select { |t| t["series"] == s["id"] } %>
+      <div class="series-card talk-series-filter" data-series="<%= s["id"] %>">
+        <strong class="series-title"><%= s["title"] %></strong>
+        <span class="series-meta"><%= series_talks.size %> talks</span>
+      </div>
+    <% end %>
+    <div class="series-card talk-series-filter active" data-series="all">
+      <strong class="series-title">Show All</strong>
+    </div>
+  </aside>
 </div>
+
+<script>
+(function() {
+  const items = document.querySelectorAll(".talk-item");
+  const seriesFilters = document.querySelectorAll(".talk-series-filter");
+  const tagFilters = document.querySelectorAll(".talk-filter-tag");
+  let activeFilter = null;
+
+  function filter(type, value) {
+    if (activeFilter === value) { activeFilter = null; } else { activeFilter = value; }
+    items.forEach(item => {
+      if (!activeFilter) { item.style.display = ""; return; }
+      const match = type === "series"
+        ? item.dataset.series === value
+        : item.dataset.tags.split(" ").includes(value);
+      item.style.display = match ? "" : "none";
+    });
+    seriesFilters.forEach(f => f.classList.toggle("active", !activeFilter && f.dataset.series === "all" || f.dataset.series === activeFilter));
+    tagFilters.forEach(f => f.classList.toggle("active", f.dataset.filter === activeFilter));
+  }
+
+  seriesFilters.forEach(f => f.addEventListener("click", () => filter("series", f.dataset.series === "all" ? null : f.dataset.series)));
+  tagFilters.forEach(f => f.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); filter("tag", f.dataset.filter); }));
+
+  const select = document.getElementById("talk-series-select");
+  if (select) {
+    select.addEventListener("change", () => {
+      const val = select.value === "all" ? null : select.value;
+      activeFilter = null;
+      filter("series", val);
+    });
+  }
+})();
+</script>

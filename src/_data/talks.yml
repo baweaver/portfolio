@@ -1,0 +1,122 @@
+series:
+  - id: illustrated-adventures
+    title: "Illustrated Adventures"
+    description: "Fully illustrated conference talks featuring cartoon lemurs."
+  - id: pattern-matching
+    title: "Pattern Matching"
+    description: "Ruby's pattern matching from proof of concept to production."
+  - id: autistic-developer
+    title: "Tales of the Autistic Developer"
+    description: "Speaking openly about autism and ADHD in engineering."
+  - id: ai-engineering
+    title: "AI Engineering"
+    description: "AI-native tools for real codebases."
+
+talks:
+  - title: "We Who Remember Magic"
+    event: "RubyConf 2026"
+    year: 2026
+    url: "https://www.rubyevents.org/talks/we-who-remember-magic"
+    tags: ["illustrated", "community"]
+    series: illustrated-adventures
+    upcoming: true
+
+  - title: "We Who Remember Magic"
+    event: "Rocky Mountain Ruby 2025 · Boulder, CO"
+    year: 2025
+    url: "https://www.rubyevents.org/talks/keynote-we-who-remember-magic"
+    tags: ["illustrated", "community"]
+    series: illustrated-adventures
+    keynote: true
+
+  - title: "Rails Expertise, Distilled: AI Agents That Get Your Monolith"
+    event: "San Francisco Ruby Conference 2025"
+    year: 2025
+    url: "https://www.rubyevents.org/talks/rails-expertise-distilled-ai-agents-that-get-your-monolith"
+    tags: ["ai", "rails"]
+    series: ai-engineering
+
+  - title: "Red in Fantasyland"
+    event: "RubyConf 2024 · Chicago, IL"
+    year: 2024
+    url: "https://www.rubyevents.org/talks/keynote-red-in-fantasyland"
+    tags: ["illustrated", "functional"]
+    series: illustrated-adventures
+    keynote: true
+
+  - title: "Refactoring with ASTs and Pattern Matching"
+    event: "RubyKaigi 2024 · Okinawa, Japan"
+    year: 2024
+    url: "https://www.rubyevents.org/talks/refactoring-with-asts-and-pattern-matching"
+    tags: ["pattern-matching", "tooling"]
+    series: pattern-matching
+
+  - title: "Teaching Capybara Testing - An Illustrated Adventure"
+    event: "RailsConf 2023 · Atlanta, GA"
+    year: 2023
+    url: "https://www.rubyevents.org/talks/teaching-capybara-testing-an-illustrated-adventure"
+    tags: ["illustrated", "testing"]
+    series: illustrated-adventures
+
+  - title: "The Night Before Code Freeze"
+    event: "RubyConf 2023 · Lightning Talk"
+    year: 2023
+    url: "https://www.rubyevents.org/talks/lightning-talk-the-night-before-code-freeze"
+    tags: ["illustrated", "community"]
+    series: illustrated-adventures
+
+  - title: "Behind the Lemurs - Creating an Illustrated Talk"
+    event: "RailsConf 2022 · Portland, OR"
+    year: 2022
+    url: "https://www.rubyevents.org/talks/behind-the-lemurs-creating-an-illustrated-talk"
+    tags: ["illustrated", "meta"]
+    series: illustrated-adventures
+
+  - title: "Delightfully Fashionable Lemurs in Decorating Ruby"
+    event: "RubyConf 2021 · Denver, CO"
+    year: 2021
+    url: "https://www.rubyevents.org/talks/delightfully-fashionable-lemurs-in-decorating-ruby"
+    tags: ["illustrated", "metaprogramming"]
+    series: illustrated-adventures
+
+  - title: "Playing a Hand with Ruby Pattern Matching"
+    event: "rubyday 2021 · Italy"
+    year: 2021
+    url: "https://www.rubyevents.org/talks/playing-a-hand-with-ruby-pattern-matching"
+    tags: ["pattern-matching", "illustrated"]
+    series: pattern-matching
+
+  - title: "Tales of the Autistic Developer: The Expert"
+    event: "RubyConf 2020"
+    year: 2020
+    url: "https://www.rubyevents.org/talks/tales-of-the-autistic-developer-the-expert"
+    tags: ["autism", "leadership"]
+    series: autistic-developer
+
+  - title: "Tales From The Ruby Grimoire"
+    event: "RubyConf AU 2020 · Melbourne, Australia"
+    year: 2020
+    url: "https://www.rubyevents.org/talks/tales-from-the-ruby-grimoire"
+    tags: ["illustrated", "functional"]
+    series: illustrated-adventures
+
+  - title: "Tales of the Ruby Grimoire"
+    event: "RubyConf 2019 · Nashville, TN"
+    year: 2019
+    url: "https://www.rubyevents.org/talks/tales-of-the-ruby-grimoire"
+    tags: ["illustrated", "functional"]
+    series: illustrated-adventures
+
+  - title: "The Action Cable Symphony - An Illustrated Musical Adventure"
+    event: "RailsConf 2019 · Minneapolis, MN"
+    year: 2019
+    url: "https://www.rubyevents.org/talks/the-action-cable-symphony-an-illustrated-musical-adventure"
+    tags: ["illustrated", "rails"]
+    series: illustrated-adventures
+
+  - title: "Reducing Enumerable - An Illustrated Adventure"
+    event: "RubyConf 2018 · Los Angeles, CA"
+    year: 2018
+    url: "https://www.rubyevents.org/talks/reducing-enumerable-an-illustrated-adventure"
+    tags: ["illustrated", "functional"]
+    series: illustrated-adventures
