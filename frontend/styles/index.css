@@ -525,3 +525,16 @@ a:hover { color: var(--dusk-blue); }
   .series-sticky { display: none; }
   .back-to-top { display: none !important; }
 }
+
+.path-list { padding-left: 20px; margin-top: 12px; }
+.path-list li { font-size: 14px; line-height: 1.8; margin-bottom: 4px; }
+.path-list li a { color: var(--mystic-purple); text-decoration: none; }
+.path-list li a:hover { color: var(--dusk-blue); text-decoration: underline; }
+
+.writing-tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--warm-stone); }
+.writing-tab { background: none; border: none; padding: 10px 20px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--graphite); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.writing-tab.active { color: var(--mystic-purple); border-bottom-color: var(--mystic-purple); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.path-nav-section { margin-top: 24px; }

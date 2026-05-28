@@ -1,0 +1,17 @@
+<div class="path-nav-section">
+  <h3 class="sidebar-heading">In This Path</h3>
+  <strong class="series-title"><%= path_title %></strong>
+  <span class="series-meta"><%= position %> of <%= total %></span>
+  <div class="series-arrows">
+    <% if prev_post %>
+      <a href="<%= prev_post.relative_url %>" class="series-arrow">← Previous</a>
+    <% else %>
+      <span class="series-arrow disabled">← Previous</span>
+    <% end %>
+    <% if next_post %>
+      <a href="<%= next_post.relative_url %>" class="series-arrow">Next →</a>
+    <% else %>
+      <span class="series-arrow disabled">Next →</span>
+    <% end %>
+  </div>
+</div>

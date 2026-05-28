@@ -9,6 +9,11 @@ title: Writing
     <div class="post-search-wrapper">
       <select id="post-search" placeholder="Search posts..."></select>
     </div>
+    <div class="writing-tabs">
+      <button class="writing-tab active" data-tab="recent">Recent</button>
+      <button class="writing-tab" data-tab="paths">Learning Paths</button>
+    </div>
+    <div class="tab-panel active" id="tab-recent">
     <div class="post-list">
       <% collections.posts.resources.select { |p| p.data.date }.sort_by { |p| p.data.date }.reverse.each do |post| %>
         <div class="post-list-entry">
@@ -27,6 +32,23 @@ title: Writing
             </div>
           <% end %>
         </div>
+      <% end %>
+    </div>
+    </div>
+    <div class="tab-panel" id="tab-paths">
+      <% site.data.learning_paths.each do |path| %>
+      <div class="section-gap">
+        <h2 class="section-heading"><%= path["title"] %></h2>
+        <p class="prose"><%= path["description"] %></p>
+        <ol class="path-list">
+          <% path["posts"].each do |post_url| %>
+            <% post = collections.posts.resources.find { |p| p.relative_url == post_url } %>
+            <% if post %>
+            <li><a href="<%= post.relative_url %>"><%= post.data.title %></a></li>
+            <% end %>
+          <% end %>
+        </ol>
+      </div>
       <% end %>
     </div>
   </div>

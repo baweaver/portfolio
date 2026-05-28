@@ -1,0 +1,23 @@
+---
+layout: default
+title: Learning Paths
+---
+<div class="page">
+  <h1 class="page-title">Learning Paths</h1>
+  <p class="page-subtitle">Guided reading paths through my articles, organized by interest and experience level.</p>
+
+  <% site.data.learning_paths.each do |path| %>
+  <article class="section-gap">
+    <h2 class="section-heading"><%= path["title"] %></h2>
+    <p class="prose"><%= path["description"] %></p>
+    <ol class="path-list">
+      <% path["posts"].each do |post_url| %>
+        <% post = collections.posts.resources.find { |p| p.relative_url == post_url } %>
+        <% if post %>
+        <li><a href="<%= post.relative_url %>"><%= post.data.title %></a></li>
+        <% end %>
+      <% end %>
+    </ol>
+  </article>
+  <% end %>
+</div>

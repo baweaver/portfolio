@@ -1,0 +1,76 @@
+- id: new-to-ruby
+  title: "New to Ruby"
+  description: "Starting from scratch? These posts cover the fundamentals you need to write idiomatic Ruby."
+  posts:
+    - /writing/2021/02/06/understanding-ruby-triple-equals-2p9c/
+    - /writing/2021/02/07/understanding-ruby-blocks-procs-and-lambdas-24o0/
+    - /writing/2021/02/08/understanding-ruby-toproc-and-function-interfaces-2o1d/
+    - /writing/2021/02/09/understanding-ruby-comparable-34ki/
+    - /writing/2021/02/11/understanding-ruby-enumerable-intro-and-interfaces-29bk/
+    - /writing/2021/02/11/understanding-ruby-enumerable-transformations-27gj/
+    - /writing/2021/02/11/understanding-ruby-enumerable-searching-and-filtering-23o7/
+    - /writing/2021/02/11/understanding-ruby-enumerable-predicate-conditions-1fjg/
+    - /writing/2021/02/11/understanding-ruby-enumerable-sorting-and-comparing-fff/
+    - /writing/2021/02/11/understanding-ruby-enumerable-counting-2cii/
+    - /writing/2021/02/12/understanding-ruby-enumerable-combining-58eo/
+    - /writing/2021/02/12/understanding-ruby-enumerable-grouping-59pl/
+    - /writing/2021/02/12/understanding-ruby-enumerable-iterating-and-taking-1fga/
+    - /writing/2021/02/12/understanding-ruby-enumerable-coercion-56ji/
+    - /writing/2021/07/31/understanding-ruby-for-vs-each-47ae/
+    - /writing/2022/08/26/understanding-ruby-recursion-235f/
+    - /writing/2023/10/01/understanding-ruby-memoization-2be5/
+
+- id: functional-ruby
+  title: "Functional Ruby"
+  description: "Closures, reduce, transducers, monoids, and functional patterns applied in Ruby."
+  posts:
+    - /writing/2017/10/16/reducing-enumerable-the-basics/
+    - /writing/2017/10/16/reducing-enumerable-no-op-and-boolean/
+    - /writing/2017/10/17/reducing-enumerable-sorting-and-state/
+    - /writing/2018/05/13/functional-programming-in-ruby-closures/
+    - /writing/2018/05/13/functional-programming-in-ruby-flow-control/
+    - /writing/2018/09/10/understanding-transducers-in-ruby/
+    - /writing/2019/08/19/of-a-higher-order-map-filter-reduce-49f6/
+    - /writing/2019/11/01/deeper-magics-monoids-in-ruby-and-rails-324o/
+    - /writing/2020/08/06/clocks-are-monoids-too-53ne/
+    - /writing/2021/08/01/functional-programming-in-ruby-state-13p2/
+
+- id: systems-architecture
+  title: "Systems & Architecture"
+  description: "Thinking about large codebases, modularity, ASTs, and tooling at scale."
+  posts:
+    - /writing/2021/11/14/future-of-ruby-ast-tooling-9i1/
+    - /writing/2022/06/14/asts-in-ruby-pattern-matching-mjd/
+    - /writing/2022/06/15/asts-in-ruby-node-pattern-and-introducing-rubocop-1j93/
+    - /writing/2022/06/05/exploring-dryrb-intuition-of-results-1lnd/
+
+- id: senior-career
+  title: "Senior & Career"
+  description: "What it means to go beyond senior, progressive influence, promotions, and leadership."
+  posts:
+    - /writing/2022/09/03/beyond-senior-progressive-influence-254g/
+    - /writing/2022/09/04/beyond-senior-just-enough-experimentation-hg7/
+    - /writing/2022/09/05/beyond-senior-the-ic-misnomer-dd9/
+    - /writing/2022/09/18/beyond-senior-the-peacock-the-hermit-and-the-counsel-74f/
+    - /writing/2022/11/30/beyond-senior-the-parable-of-the-sword-lp8/
+    - /writing/2023/04/27/beyond-senior-the-vista-problem-507k/
+    - /writing/2023/05/11/beyond-senior-fire-fire-1477/
+    - /writing/2023/09/28/beyond-senior-metric-obsessions-1j7p/
+    - /writing/2022/10/04/on-promotions-npl/
+    - /writing/2021/05/15/interviewing-perspective-of-the-interviewee-ia0/
+
+- id: neurodivergence
+  title: "Neurodivergence in Tech"
+  description: "Writing about autism, ADHD, and building a career that works with how you're wired."
+  posts:
+    - /writing/2018/10/24/lemurs-mean-hope/
+    - /writing/2019/07/14/tales-of-the-autistic-developer-the-10x-engineer-180o/
+    - /writing/2019/07/14/tales-of-the-autistic-developer-the-ecstasy-of-the-void-1gok/
+    - /writing/2019/09/14/the-myth-of-the-autistic-jerk-3kjl/
+    - /writing/2020/08/02/tales-of-the-autistic-developer-senior-developer-3l0c/
+    - /writing/2020/09/02/tales-of-the-autistic-developer-the-mentor-5hi6/
+    - /writing/2020/12/25/tales-of-the-autistic-developer-the-expert-pk2/
+    - /writing/2021/10/17/tales-of-the-autistic-developer-loud-loud-world-122c/
+    - /writing/2021/11/19/tales-of-the-autistic-developer-order-and-chaos-2o0p/
+    - /writing/2022/03/21/tales-of-the-autistic-developer-the-politician-5aid/
+    - /writing/2022/06/20/on-autism-grounding-and-normalcy-3kcn/
