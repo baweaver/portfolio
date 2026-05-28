@@ -14,6 +14,20 @@
 <meta name="twitter:title" content="<%= resource.data.title || "baweaver" %>" />
 <meta name="twitter:description" content="<%= description %>" />
 <link rel="alternate" type="application/atom+xml" title="baweaver" href="/feed.xml" />
+<% if resource.collection&.label == "posts" %>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "<%= resource.data.title %>",
+  "description": "<%= description %>",
+  "datePublished": "<%= resource.data.date.strftime("%Y-%m-%d") %>",
+  "author": { "@type": "Person", "name": "Brandon Weaver", "url": "https://baweaver.com/about/" },
+  "publisher": { "@type": "Person", "name": "Brandon Weaver" },
+  "url": "<%= "#{site.config.url}#{resource.relative_url}" %>"
+}
+</script>
+<% end %>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Caveat:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Kalam:wght@300;400;700&display=swap" />
 <% if Bridgetown.env.development? %>
 <script>

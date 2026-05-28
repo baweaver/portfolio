@@ -4,7 +4,7 @@ title: "Moving to Dev.To"
 date: "2019-08-16"
 categories: []
 tags: []
-description: ""
+description: "Why I moved my writing to Dev.To and what I hope to get out of it."
 ---
 
 I’ve decided to migrate my new content to dev.to, and have been publishing there over the past few months.
