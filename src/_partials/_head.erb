@@ -3,6 +3,17 @@
 <meta name="base-path" content="<%= site.base_path %>" />
 <title><%= resource.data.title ? "#{resource.data.title} | baweaver" : "baweaver" %></title>
 <link rel="canonical" href="<%= "#{site.config.url}#{resource.relative_url}" %>" />
+<% description = resource.data.description || "Engineering systems that endure." %>
+<meta name="description" content="<%= description %>" />
+<meta property="og:title" content="<%= resource.data.title || "baweaver" %>" />
+<meta property="og:description" content="<%= description %>" />
+<meta property="og:url" content="<%= "#{site.config.url}#{resource.relative_url}" %>" />
+<meta property="og:site_name" content="baweaver" />
+<meta property="og:type" content="<%= resource.collection&.label == "posts" ? "article" : "website" %>" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="<%= resource.data.title || "baweaver" %>" />
+<meta name="twitter:description" content="<%= description %>" />
+<link rel="alternate" type="application/atom+xml" title="baweaver" href="/feed.xml" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Caveat:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Kalam:wght@300;400;700&display=swap" />
 <% if Bridgetown.env.development? %>
 <script>

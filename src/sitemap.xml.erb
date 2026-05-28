@@ -1,0 +1,18 @@
+---
+permalink: /sitemap.xml
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <% site.collections.pages.resources.each do |page| %>
+  <% next if page.relative_url.match?(/\A\/(404|500|search\.json|robots\.txt|sitemap\.xml|feed\.xml)/) %>
+  <url>
+    <loc><%= "#{site.config.url}#{page.relative_url}" %></loc>
+  </url>
+  <% end %>
+  <% collections.posts.resources.sort_by { |p| p.data.date }.reverse.each do |post| %>
+  <url>
+    <loc><%= "#{site.config.url}#{post.relative_url}" %></loc>
+    <lastmod><%= post.data.date.strftime("%Y-%m-%d") %></lastmod>
+  </url>
+  <% end %>
+</urlset>

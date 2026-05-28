@@ -1,0 +1,26 @@
+---
+permalink: /feed.xml
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>baweaver</title>
+  <subtitle>Engineering systems that endure.</subtitle>
+  <link href="<%= site.config.url %>/feed.xml" rel="self" type="application/atom+xml"/>
+  <link href="<%= site.config.url %>/" rel="alternate" type="text/html"/>
+  <updated><%= collections.posts.resources.max_by { |p| p.data.date }&.data&.date&.xmlschema %></updated>
+  <id><%= site.config.url %>/</id>
+  <author>
+    <name>Brandon Weaver</name>
+  </author>
+  <% collections.posts.resources.sort_by { |p| p.data.date }.reverse.first(20).each do |post| %>
+  <entry>
+    <title><%= post.data.title %></title>
+    <link href="<%= site.config.url %><%= post.relative_url %>" rel="alternate" type="text/html"/>
+    <published><%= post.data.date.xmlschema %></published>
+    <id><%= site.config.url %><%= post.relative_url %></id>
+    <% if post.data.description && !post.data.description.empty? %>
+    <summary><%= post.data.description %></summary>
+    <% end %>
+  </entry>
+  <% end %>
+</feed>
