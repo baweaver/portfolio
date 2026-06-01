@@ -3,6 +3,13 @@ class Builders::Helpers < SiteBuilder
     helper "img", :img
     helper "link_to", :link_to_helper
     helper "nav_link", :nav_link
+    helper "claim", :claim
+  end
+
+  # Usage: <%= claim("moving average count", 6) %>
+  # Renders the value inline as plain text. The claim name must have a matching spec assertion.
+  def claim(_name, value)
+    value.to_s
   end
 
   # Usage: <%= img "/images/logo.png", alt: "Logo", class: "lantern" %>

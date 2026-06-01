@@ -42,3 +42,6 @@ gem "falcon"
 
 # Or for faster parsing of HTML-only resources via Inspectors, use Nokolexbor:
 # gem "nokolexbor", "~> 0.6"
+
+gem "rspec", "~> 3.13", group: :test
+gem "simplecov", "~> 0.22", group: :test

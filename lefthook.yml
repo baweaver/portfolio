@@ -1,0 +1,18 @@
+# lefthook.yml
+pre-push:
+  commands:
+    inline-rspec:
+      glob: "src/_code/**/*.rb"
+      run: bundle exec rspec {staged_files}
+    verify-claims:
+      glob: "src/_posts/**/*.md"
+      run: ruby scripts/verify_claims.rb
+
+pre-commit:
+  commands:
+    inline-rspec:
+      glob: "src/_code/**/*.rb"
+      run: bundle exec rspec {staged_files}
+    verify-claims:
+      glob: "src/_posts/**/*.md"
+      run: ruby scripts/verify_claims.rb
