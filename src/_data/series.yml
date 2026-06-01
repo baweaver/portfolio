@@ -41,3 +41,7 @@
 - id: functional-programming-ruby
   title: "Functional Programming in Ruby"
   prefix: "Functional Programming in Ruby"
+
+- id: beyond-enumerable
+  title: "Beyond Enumerable"
+  prefix: "Beyond Enumerable"
