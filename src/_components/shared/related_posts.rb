@@ -8,6 +8,8 @@ class Shared::RelatedPosts < Bridgetown::Component
 
     @posts = site.collections.posts.resources
       .reject { |p| p.relative_url == resource.relative_url }
+      # Memorial posts should not appear as casual recommendations
+      .reject { |p| p.data.tags&.map(&:downcase)&.include?("death") }
       .select { |p| p.data.tags&.any? }
       .map { |p| { post: p, score: relevance_score(p) } }
       .select { |h| h[:score] > 1 }
