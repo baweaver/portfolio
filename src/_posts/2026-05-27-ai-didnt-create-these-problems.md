@@ -11,7 +11,7 @@ I've spent the better part of the last few years using AI heavily at work, and t
 
 Every single guardrail I've had to put in front of AI to keep it on track, make it more productive, more predictable, and less risky? They're all things we should have been doing all along.
 
-Testing, documentation, clear ownership, up to date documentation, deterministic validations? None of them are new, none of them are particularly controversial, and yet the moment that you let AI take the wheel you find out exactly how much of it was missing.
+Testing, clear ownership, up to date documentation, deterministic validations? None of them are new, none of them are particularly controversial, and yet the moment that you let AI take the wheel you find out exactly how much of it was missing.
 
 ## The Routing Problem
 
@@ -35,9 +35,9 @@ That's the pattern. The stale documentation that only three people know how to u
 
 There's a certain irony in all of this that I can't help but find amusing. Years ago Netflix invented this novel concept called the [Chaos Monkey](https://netflix.github.io/chaosmonkey/), a tool that would randomly nuke a server from orbit. It wouldn't tell you what, where, when, or even why as much as something would die and you had better hope that you designed things well enough to self-heal or it's going to be a long day.
 
-Why bring this up? Because AI is the best chaos engineer we've ever had. It finds gaps and holes that you would have never considers. It squeezes through cracks in the side of a building where the paint chipped at a certain angle at a particular hour of night when the moon hits it in a way that leaves everyone involved doubting their sanity and asking how in the world this happend.
+Why bring this up? Because AI is the best chaos engineer we've ever had. It finds gaps and holes that you would have never considered. It squeezes through cracks in the side of a building where the paint chipped at a certain angle at a particular hour of night when the moon hits it in a way that leaves everyone involved doubting their sanity and asking how in the world this happened.
 
-AI is stress-testing our assumptions about how code should be written, what documentation needs to exist, and whether our systems are actually as robust as we think that are (they're not.)
+AI is stress-testing our assumptions about how code should be written, what documentation needs to exist, and whether our systems are actually as robust as we think they are (they're not.)
 
 The important part is how we choose to respond to that. Do we behave like systems thinkers who consider how systems failed, or do we point fingers and blame? When production blows up a good engineer will ask what failed in this system that allowed this particular category of error to happen. We do not lecture about how a developer must not have been paying attention or how bad they are at their jobs. The same frame applies to AI: It's going to make mistakes. We know it, so what are we building around it to make those mistakes identifiable and survivable?
 
@@ -53,13 +53,13 @@ Same with Rubocop, same with Minitest, same with pretty well every developer too
 
 I've started telling all of my AI tools to output JSON, and then re-parse that for any new information, and then started systematically disallowing raw commands from being run without clear wrappers that guarantee that structured output. That single change has made me substantially more effective at getting AI to actually diagnose issues instead of repeatedly saying "let me try again." Is it perfect? No, but it's a definite step, and perhaps the foundation for a new way of thinking about these tools.
 
-Now I'm not criticizing these tools, not at all. They were build for their moment, and they're great at what they do, but that moment has shifted. In this new world we need to start asking what agentic modes might look like for RSpec, for RuboCop, and for our entire developer toolchain. How do we give AI the context it needs, at the right time, to (hopefully) do the right thing with that information.
+Now I'm not criticizing these tools, not at all. They were built for their moment, and they're great at what they do, but that moment has shifted. In this new world we need to start asking what agentic modes might look like for RSpec, for RuboCop, and for our entire developer toolchain. How do we give AI the context it needs, at the right time, to (hopefully) do the right thing with that information.
 
 ## The 80/20 Split
 
 When developing tooling with AI, _especially_ for anything spanning more than 10 files, I like to use an 80/20 rule: 80% deterministic code, 20% AI glue for the finnicky details that would take hours to get right.
 
-The deterministic part is everything we can reasonably validate, type check, lint, and test without ambiguity. Contracts, schemas, static typing, feature flags, staged rollouts. All the boring infrastructure that makes systems substantially more predictable, and more tolerant to failure, and things will _always_ fail some how some way.
+The deterministic part is everything we can reasonably validate, type check, lint, and test without ambiguity. Contracts, schemas, static typing, feature flags, staged rollouts. All the boring infrastructure that makes systems substantially more predictable, and more tolerant to failure, and things will _always_ fail somehow, some way.
 
 > **Static Typing in Ruby**: As an aside, the static typing debate in Ruby while valid does not hold well in the era of AI when any additional guardrail may be the layer that stops it from doing something particularly naughty. I've gotten substantial leverage out of Sorbet, and would certainly encourage its use in any large codebase which has AI running about.
 
