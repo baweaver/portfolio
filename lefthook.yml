@@ -13,6 +13,9 @@ pre-commit:
     inline-rspec:
       glob: "src/_code/**/*.rb"
       run: bundle exec rspec {staged_files}
+    coverage:
+      glob: "src/_code/**/*.rb"
+      run: COVERAGE=PartialSummary bundle exec rspec {staged_files} && ruby scripts/check_coverage.rb {staged_files}
     verify-claims:
       glob: "src/_posts/**/*.md"
       run: ruby scripts/verify_claims.rb

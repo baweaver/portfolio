@@ -44,4 +44,6 @@ gem "falcon"
 # gem "nokolexbor", "~> 0.6"
 
 gem "rspec", "~> 3.13", group: :test
-gem "simplecov", "~> 0.22", group: :test
+gem "covered", "~> 0.28", group: :test
+gem "rails", "~> 8.0", group: :test, require: false
+gem "trilogy", "~> 2.12", group: :test
