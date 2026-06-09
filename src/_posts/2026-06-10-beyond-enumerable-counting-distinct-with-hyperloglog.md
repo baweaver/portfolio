@@ -16,7 +16,7 @@ The first question that kept coming up: how do you count distinct values when yo
 
 ## We called heads
 
-Humor me for a moment. Say that you were flipping coins and someone happened to get four heads in a row, not exactly uncommon but it's much less likely than say one or two heads in a row. How about twenty? If someone managed to land that you'd think it's either a rigged coin or they've been flipping for a while to get to that number. Point being the more consecutive heads someone gets the less likely that was to happen.
+Humor me for a moment. Say that you were flipping coins and someone happened to get four heads in a row, not exactly uncommon but it's much less likely than say one or two heads in a row. Each flip is 50/50, so two in a row is ½ × ½, three is ½ × ½ × ½, and twenty in a row is ½ multiplied twenty times. How about twenty? If someone managed to land that you'd think it's either a rigged coin or they've been flipping for a while to get to that number. Point being the more consecutive heads someone gets the less likely that was to happen.
 
 Why does that matter? Because that rate is predictable, and if someone managed to land twenty heads you can reasonably assume that they've been at the coin flipping game for a number of days or weeks by that point considering the odds of that happening are <%= claim("twenty heads odds", "one in about a million") %>, or a couple of weeks of non-stop flipping, give or take. Either that or they're really lucky, hold onto that thought, we'll get back to it.
 
@@ -30,31 +30,56 @@ In programming we have hashing functions which can transform something into an e
 
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "hashing") %>
 
-This is the hashing function we're going to be using. SHA-256 is a specific hash algorithm (the name doesn't matter, what matters is that its output bits are evenly spread). The "digest" is the number it spits out, and "hex characters" are the digits 0-9 and letters a-f, a compact way to write binary. We take the first 16 hex characters and convert them to an integer, which gives us sixty-four effective coin flips to judge rarity by, or `2**64` which is a really danged big number of about 18.4 quintillion which is a lot of headroom to play with that we can reason about probabilistically.
+This is the hashing function we're going to be using. SHA-256 is a specific hash algorithm (the name doesn't matter, what matters is that its output bits are evenly spread). The "digest" is the number it spits out, and "hex characters" are the digits 0-9 and letters a-f, a compact way to write binary. Each hex character packs 4 bits, so the first 16 of them give us 64 bits — sixty-four coin flips to judge rarity by. `2**64` is about 18.4 quintillion which is a lot of headroom to reason about probabilistically.
 
 ## Thinking in bits
 
 Look, unless you're deep in core, or were a C programmer, chances are you're not making a habit of bit manipulation in Ruby. Most Ruby developers are going to get lost the second we start looking at bit twiddling, myself included, but the usefulness of them warrants some discomfort to understand the underlying mechanics and how they can serve us.
 
-For the sake of this article we're going to need to read _portions_ of a number's binary representation, like individual bits or series of bits, and that's going to involve learning a few small tools to do so effectively.
+For the sake of this article we're going to need to pull a hash apart — some bits pick a bucket, the rest get measured — and flip individual bits on and off. There are only a few moves, and here's each one on a small number.
 
-**Right shift (`>>`)** drops the bottom bits, keeping the top:
+### What binary is
+
+A number in binary is a row of 0s and 1s, where each slot is worth twice the one to its right: 1, 2, 4, 8, 16, 32, 64, 128 and so on. Ruby writes binary with a `0b` prefix, so `0b10110110` is 128 + 32 + 16 + 4 + 2 = 182. We number the slots from the right starting at 0, so bit 0 is the rightmost.
+
+### Three shortcuts to keep in your pocket
+
+Everything ahead is one of these three in disguise:
+
+- Shifting left by n (`<< n`) is multiplying by `2**n`
+- Shifting right by n (`>> n`) is dividing by `2**n`
+- Masking off the bottom n bits (`& (2**n - 1)`) is the remainder of that division
+
+If you remember those three, every bit trick below is legible.
+
+### Left shift (`<<`) slides bits up
+
+<%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "bit_left_shift") %>
+
+### Right shift (`>>`) slides bits down
 
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "bit_right_shift") %>
 
-**Masking (`&`)** keeps specific bits and zeros the rest:
+### Masking (`&`) keeps specific bits
 
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "bit_mask") %>
 
-**OR-assignment (`|=`)** sets a specific bit without touching any others:
+### Setting a single bit with `|=`
+
+<%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "bit_set_single") %>
+
+### Packing bits into words
+
+A single Ruby integer can hold 64 bits. When we need more (like a million-bit bitmap), we use an array of these integers, where each one holds 64 bits. To find which integer (which "word") holds a given bit position, and which slot within that word:
+
+- Word index: `position >> 6` (divide by 64)
+- Slot within the word: `position & 63` (remainder after dividing by 64)
+
+Setting and checking a bit in a word array uses the same `|=` and `>> & 1` from above, applied to the right word:
 
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "bit_set") %>
 
-**Checking a bit** reverses the process:
-
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "bit_check") %>
-
-One pattern shows up repeatedly in the code below: `position >> 6` and `position & 63`. We group bits into chunks of 64 (called "words") because that's how much a modern CPU handles in one operation. Dividing the position by 64 tells you which word, and the remainder tells you which slot within it.
 
 ## Step one: a filling bitmap
 
@@ -86,7 +111,7 @@ Remember the coin flips from earlier? Each bit of a hash is an independent flip.
 
 A hash with no leading zeros (top bit is 1) shows up about half the time. Ten leading zeros shows up about once in `2**10` distinct values. Twenty shows up once in about a million. The longest leading-zero run you've ever seen is a rough indicator of how many distinct items have passed through.
 
-A maximum run of 30 suggests around `2**30` distinct items. Unlike the bitmap, this number never hits a ceiling because longer runs keep appearing as more distinct values arrive. The catch hides in that word _suggests_: a single leading-zero count is noisy, and one lucky hash throws the whole guess off.
+Flip the logic around: if the rarest thing you've witnessed happens about once in a million, you've probably had about a million chances at it. So a maximum run of 30 means you've likely seen around `2**30` distinct values. Unlike the bitmap, this number never hits a ceiling because longer runs keep appearing as more distinct values arrive. The catch hides in that word _suggests_: a single leading-zero count is noisy, and one lucky hash throws the whole guess off.
 
 ## Step three: taming the noise
 
@@ -140,6 +165,6 @@ If you've ever called `PFCOUNT` on a Redis key, that number came from the harmon
 
 ## Measuring it
 
-At precision 14, this implementation estimates a million distinct sequential integers to within 0.3% of the true count, and holds similar accuracy at 100k and 5M distinct.
+At precision 14, this implementation estimates sequential integers to within about 0.1% at a million distinct, 0.4% at 100k, and 0.65% at 5M — all inside the 0.81% the math predicts.
 
 The next post takes the same bit-packing toolkit and applies it to a different question: not "how many distinct" but "have I seen this specific one before." That's Bloom filters.

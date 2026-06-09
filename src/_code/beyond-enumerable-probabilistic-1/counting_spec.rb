@@ -19,6 +19,12 @@ RSpec.describe "Beyond Enumerable: Counting Distinct" do
     end
   end
 
+  describe "#bit_left_shift_example" do
+    it "shifts 1 left by 3 positions" do
+      expect(bit_left_shift_example).to eq(8)
+    end
+  end
+
   describe "#bit_right_shift_example" do
     it "keeps the top 3 bits" do
       expect(bit_right_shift_example).to eq(5)
@@ -28,6 +34,12 @@ RSpec.describe "Beyond Enumerable: Counting Distinct" do
   describe "#bit_mask_example" do
     it "keeps the bottom 3 bits" do
       expect(bit_mask_example).to eq(6)
+    end
+  end
+
+  describe "#bit_set_single_example" do
+    it "turns on bit 3 of 32" do
+      expect(bit_set_single_example).to eq(40)
     end
   end
 

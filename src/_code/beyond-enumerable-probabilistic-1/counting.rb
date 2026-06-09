@@ -13,6 +13,22 @@ module Hashing
 end
 # end: hashing
 
+# segment: bit_left_shift
+def bit_left_shift_example
+  # INPUT:      0  0  0  0  0  0  0  1    (1)
+  # OPERATION:  << 3 (slide the 1 up three positions)
+  #
+  #   BEFORE:   0  0  0  0  0  0  0  1    (1)
+  #   AFTER:    0  0  0  0  1  0  0  0    (8)
+  #
+  # Shifting left by n multiplies by 2**n.
+  # 1 << 3 = 1 * 2 * 2 * 2 = 8
+
+  1 << 3
+  # => 8
+end
+# end: bit_left_shift
+
 # segment: bit_right_shift
 def bit_right_shift_example
   # >> 5 means: drop the bottom 5 bits, keep the top 3.
@@ -50,6 +66,27 @@ def bit_mask_example
   # => 6
 end
 # end: bit_mask
+
+# segment: bit_set_single
+def bit_set_single_example
+  # Turn on bit 3 of a number.
+  #
+  # 1 << 3 builds a number with ONLY bit 3 set:
+  #   0  0  0  0  1  0  0  0    (8)
+  #
+  # |= (OR-assign) turns on that bit without touching others:
+  #   BEFORE:   0  0  1  0  0  0  0  0    (32)
+  #   OR:       0  0  0  0  1  0  0  0    (8)
+  #   (| keeps 1 wherever EITHER has 1)
+  #   -----------------------------------------
+  #   AFTER:    0  0  1  0  1  0  0  0    (40)
+
+  number = 0b00100000  # 32
+  number |= (1 << 3)
+  number
+  # => 40
+end
+# end: bit_set_single
 
 # segment: bit_set
 def bit_set_example
@@ -181,7 +218,7 @@ def harmonic_mean(values)
   #   The outlier barely registers.
   #
   # This is why HyperLogLog uses harmonic mean:
-  # a single register that got "lucky" (saw a long run of zeros)
+  # a single measurement that got "lucky" (saw a long run of zeros)
   # can't drag the entire estimate up the way arithmetic would.
 
   values.size.to_f / values.sum { |value| 1.0 / value }
