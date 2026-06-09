@@ -22,7 +22,7 @@ You're now the proud owner of a build system, lucky you. The problem is that the
 
 Each key is a task, and each value is what that task depends on finishing first. In order for the full process to succeed these tasks need to run in the correct order, but how precisely does someone approach that problem?
 
-## The Wrong Sort of Problem
+## The wrong sort of problem
 
 The most immediate answer is `sort`, but `sort` by what and how? You can't really compare or order `:build` versus `:test` as they exist here, so where do we start looking? The problem here is that we're looking at the individual values when what we really need to care about are the lines between them that tell us how they relate to each other.
 
@@ -88,7 +88,7 @@ One approach is to pick one path, let's say the leftmost one, and keep picking l
 
 This is called **depth-first search** and the first implementations of this you might see are going to likely involve recursion like so:
 
-<%= render Shared::CodeBlock.new(file: "beyond-enumerable-graphs/graph.rb", segment: "reachable_recursive") %>
+<%= render Shared::CodeBlock.new(file: "beyond-enumerable-graphs/graph.rb", segment: "reachable_dfs_recursive") %>
 
 Note the `visited` set there, because it's not optional. Think of it like marking an "X" on every path you've already visited, maybe you're forgetful like me and you end up back down the same path again, and if that happens enough you're who knows where and _very very_ lost. In recursion that'll land you in infinite loop hell, so best to avoid it.
 
@@ -96,7 +96,7 @@ Past that, `fetch(node, [])` over `graph[node]` is worth the extra characters. A
 
 The problem with recursion here though is that Ruby's call stack will blow up rather spectacularly if it goes deep enough (* unless you enable Tail Call Optimization, but that's an article and a half.) Given that we need to step backwards and handle the stack ourselves instead:
 
-<%= render Shared::CodeBlock.new(file: "beyond-enumerable-graphs/graph.rb", segment: "reachable_dfs") %>
+<%= render Shared::CodeBlock.new(file: "beyond-enumerable-graphs/graph.rb", segment: "reachable_dfs_iterative") %>
 
 Each descent checks the top-most node using `pop`, starting with the `start`, and then starts pushing all of the immediate children onto that stack to process next. You're effectively visiting the left-most path repeatedly until you run out of lefts, then you go one less.
 
@@ -128,13 +128,21 @@ Remember the build system from the start? Traversal handles it more cleanly than
 
 Because dependencies get visited and recorded before the things that need them, everything lands in a valid execution order. This is called a **topological sort**, a term I definitely did not know the first three times I needed one. The last time I reinvented it through sheer force of will and coffee was for a service container's dependency loader at Square, before someone finally had mercy and told me it had a name.
 
+There's usually more than one valid ordering. `[:install, :build, :test, :deploy]` and `[:install, :test, :build, :deploy]` both respect the arrows. Different implementations will produce different valid results, and that's fine as long as every dependency lands before the thing that needs it.
+
 One sharp edge, though: if two tasks depend on each other there is _no valid order_. The hand-rolled version from earlier caught that (nothing was ever _ready_, so it raised). This DFS version does not. The `visited` guard skips the cycle and gives you an order that can't actually run. Cycles in dependency graphs are a special kind of miserable to debug because everything _looks_ fine until you try to execute the result.
 
-Detecting a cycle means tracking not just where you've _been_, but where you _currently are_ on the way down. Keep a second set, `in_progress`, that holds every node on the current path, kind of like breadcrumbs. Add a node when you start visiting it, remove it when you're done with all its children. If you ever try to visit a node that's already in `in_progress`, you've followed a loop back to something you haven't finished yet.
+Detecting a cycle means tracking not just where you've _been_, but where you _currently are_ on the way down. Keep a second set, `in_progress`, that holds every node on the current path. Add a node when you start visiting it, remove it when you're done with all its children. If you ever try to visit a node that's already in `in_progress`, you've followed a loop back to something you haven't finished yet:
+
+<%= render Shared::CodeBlock.new(file: "beyond-enumerable-graphs/graph.rb", segment: "topological_sort_cycle_recursive") %>
+
+Three lines of difference from the version without cycle detection: add to `in_progress` on entry, raise if we see it again, remove on exit. Recursion is fine here because dependency graphs tend to be shallow (dozens of levels, not thousands), so the call stack isn't a realistic concern the way it was for a general graph walk.
+
+If you do need a stack-safe version, the same idea converts to an explicit stack. It's denser to read but handles arbitrarily deep graphs:
 
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-graphs/graph.rb", segment: "topological_sort_with_cycle_detection") %>
 
-`visited` says "I've been here before." `in_progress` says "I'm still here." The loop peeks with `stack.last` instead of popping because we need the node to stay on the stack while its children are processed. When we come back to it and find it in `in_progress`, that's the signal that all children are done. `in_progress.delete?` both removes it and tells us whether it was there, which doubles as the "finalize this node" trigger.
+The loop peeks with `stack.last` instead of popping because the node needs to stay on the stack while its children are processed. When we come back to it and find it in `in_progress`, that's the signal that all children are done. `in_progress.delete?` both removes it and tells us whether it was there, which doubles as the finalize trigger.
 
 Ruby ships [`TSort`](https://docs.ruby-lang.org/en/master/TSort.html) in the standard library, and has for decades. Almost nobody reaches for it because you have to already know the word "topological" to go looking, which is a shame because it handles all of the above for you:
 
@@ -152,11 +160,11 @@ A plain neighbor list doesn't capture that. Each connection needs a weight, and 
 
 Seattle to Boise through Spokane: 280 + 305 = 585 miles. Through Portland: 174 + 430 = 604 miles. Same number of hops, different cost. BFS would pick whichever it finds first, which might be the longer drive.
 
-So what do we change? Same frontier loop as BFS, but instead of pulling the _oldest_ node off the list we pull the _cheapest_. Always explore whatever we can currently reach for the least total miles, and the first time we settle on a node we know that's the cheapest way there. This is [Dijkstra's algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm), and it's really BFS with a different sort order on the queue:
+So what do we change? Same frontier loop as BFS, but instead of pulling the _oldest_ node off the list we pull the _cheapest_. Always explore whatever we can currently reach for the least total miles, and the first time we settle on a node we know that's the cheapest way there. This is [Dijkstra's algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm), and it's really BFS with a different sort order on the queue. One assumption it makes: all edge weights are non-negative. If a road can have negative miles (refunds, discounts, whatever your domain calls them) this breaks, and you need a different algorithm entirely.
 
-<%= render Shared::CodeBlock.new(file: "beyond-enumerable-graphs/graph.rb", segment: "cheapest_path") %>
+<%= render Shared::CodeBlock.new(file: "beyond-enumerable-graphs/graph.rb", segment: "cheapest_cost") %>
 
-`next if cost > best[node]` is doing something subtle. A node can end up in the frontier more than once as we discover cheaper routes to it. When an older, pricier entry for that node finally comes off the pile, this line tosses it. Without it we'd waste time re-exploring places we've already found the best route to.
+`next if cost > best[node]` handles stale entries. A node can end up in the frontier more than once as we discover cheaper routes to it. When an older, pricier entry for that node finally comes off the pile, this line tosses it. Without it we'd waste time re-exploring places we've already found the best route to.
 
 The `sort_by!` on every pass is the brute-force way to always grab the cheapest. It re-sorts the entire frontier every single time, which is wasteful. A heap (from the previous post) would do the same job in `O(log n)` per extraction, and you already know how to build one. Give it a try if you're feeling ambitious.
 

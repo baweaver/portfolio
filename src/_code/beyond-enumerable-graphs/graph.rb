@@ -54,8 +54,8 @@ def people_you_might_know(graph, me)
 end
 # end: people_you_might_know
 
-# segment: reachable_recursive
-def reachable_recursive(graph, start)
+# segment: reachable_dfs_recursive
+def reachable_dfs_recursive(graph, start)
   visited = Set.new
 
   walk = ->(node) do
@@ -67,10 +67,10 @@ def reachable_recursive(graph, start)
   walk.call(start)
   visited
 end
-# end: reachable_recursive
+# end: reachable_dfs_recursive
 
-# segment: reachable_dfs
-def reachable_dfs(graph, start)
+# segment: reachable_dfs_iterative
+def reachable_dfs_iterative(graph, start)
   visited = Set.new
   stack = [start]
 
@@ -84,7 +84,7 @@ def reachable_dfs(graph, start)
 
   visited
 end
-# end: reachable_dfs
+# end: reachable_dfs_iterative
 
 # segment: reachable_bfs
 def reachable_bfs(graph, start)
@@ -153,6 +153,29 @@ def topological_sort(graph)
 end
 # end: topological_sort
 
+# segment: topological_sort_cycle_recursive
+def topological_sort_cycle_recursive(graph)
+  visited = Set.new
+  in_progress = Set.new
+  order = []
+
+  visit = ->(node) do
+    return if visited.include?(node)
+    raise "cycle: #{node}" if in_progress.include?(node)
+
+    in_progress << node
+    graph.fetch(node, []).each { |dep| visit.call(dep) }
+    in_progress.delete(node)
+
+    visited << node
+    order << node
+  end
+
+  graph.each_key { |node| visit.call(node) }
+  order
+end
+# end: topological_sort_cycle_recursive
+
 # segment: topological_sort_with_cycle_detection
 def topological_sort_safe(graph)
   visited = Set.new
@@ -217,8 +240,8 @@ ROADS = {
 }.freeze
 # end: roads_hash
 
-# segment: cheapest_path
-def cheapest_path(graph, start, goal)
+# segment: cheapest_cost
+def cheapest_cost(graph, start, goal)
   best = Hash.new(Float::INFINITY)
   best[start] = 0
   frontier = [[0, start]]
@@ -240,4 +263,4 @@ def cheapest_path(graph, start, goal)
 
   best[goal]
 end
-# end: cheapest_path
+# end: cheapest_cost

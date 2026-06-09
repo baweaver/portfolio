@@ -30,20 +30,20 @@ RSpec.describe "Beyond Enumerable: Graphs" do
     end
   end
 
-  describe "#reachable_recursive" do
+  describe "#reachable_dfs_recursive" do
     it "finds all connected nodes" do
-      expect(reachable_recursive(FRIENDS, "Ana")).to contain_exactly("Ana", "Ben", "Cy", "Dee", "Eli")
+      expect(reachable_dfs_recursive(FRIENDS, "Ana")).to contain_exactly("Ana", "Ben", "Cy", "Dee", "Eli")
     end
 
     it "handles isolated nodes" do
       graph = { "X" => ["Y"], "Y" => ["X"], "Z" => [] }
-      expect(reachable_recursive(graph, "X")).to contain_exactly("X", "Y")
+      expect(reachable_dfs_recursive(graph, "X")).to contain_exactly("X", "Y")
     end
   end
 
-  describe "#reachable_dfs" do
+  describe "#reachable_dfs_iterative" do
     it "finds all connected nodes" do
-      expect(reachable_dfs(FRIENDS, "Ana")).to contain_exactly("Ana", "Ben", "Cy", "Dee", "Eli")
+      expect(reachable_dfs_iterative(FRIENDS, "Ana")).to contain_exactly("Ana", "Ben", "Cy", "Dee", "Eli")
     end
   end
 
@@ -74,6 +74,20 @@ RSpec.describe "Beyond Enumerable: Graphs" do
       expect(result.index(:install)).to be < result.index(:build)
       expect(result.index(:install)).to be < result.index(:test)
       expect(result.index(:build)).to be < result.index(:deploy)
+    end
+  end
+
+  describe "#topological_sort_cycle_recursive" do
+    it "produces a valid order for acyclic graphs" do
+      result = topological_sort_cycle_recursive(TASKS)
+      expect(result.index(:install)).to be < result.index(:build)
+      expect(result.index(:install)).to be < result.index(:test)
+      expect(result.index(:build)).to be < result.index(:deploy)
+    end
+
+    it "raises on a cycle" do
+      cyclic = { a: [:b], b: [:a] }
+      expect { topological_sort_cycle_recursive(cyclic) }.to raise_error(/cycle/)
     end
   end
 
@@ -132,19 +146,19 @@ RSpec.describe "Beyond Enumerable: Graphs" do
     end
   end
 
-  describe "#cheapest_path" do
+  describe "#cheapest_cost" do
     it "finds the lowest-cost route" do
       # Seattle → Spokane → Boise = 280 + 305 = 585
       # Seattle → Portland → Boise = 174 + 430 = 604
-      expect(cheapest_path(ROADS, "Seattle", "Boise")).to eq(585)
+      expect(cheapest_cost(ROADS, "Seattle", "Boise")).to eq(585)
     end
 
     it "returns 0 for start == goal" do
-      expect(cheapest_path(ROADS, "Seattle", "Seattle")).to eq(0)
+      expect(cheapest_cost(ROADS, "Seattle", "Seattle")).to eq(0)
     end
 
     it "returns infinity for unreachable nodes" do
-      expect(cheapest_path(ROADS, "Boise", "Seattle")).to eq(Float::INFINITY)
+      expect(cheapest_cost(ROADS, "Boise", "Seattle")).to eq(Float::INFINITY)
     end
   end
 end
