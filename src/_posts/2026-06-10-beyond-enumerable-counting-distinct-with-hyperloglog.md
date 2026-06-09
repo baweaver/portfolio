@@ -16,9 +16,7 @@ The first question that kept coming up: how do you count distinct values when yo
 
 ## We called heads
 
-Humor me for a moment. Say that you were flipping coins and someone happened to get four heads in a row, not exactly uncommon but it's much less likely than say one or two heads in a row. Each flip is 50/50, so two in a row is ½ × ½, three is ½ × ½ × ½, and twenty in a row is ½ multiplied twenty times. How about twenty? If someone managed to land that you'd think it's either a rigged coin or they've been flipping for a while to get to that number. Point being the more consecutive heads someone gets the less likely that was to happen.
-
-Why does that matter? Because that rate is predictable, and if someone managed to land twenty heads you can reasonably assume that they've been at the coin flipping game for a number of days or weeks by that point considering the odds of that happening are <%= claim("twenty heads odds", "one in about a million") %>, or a couple of weeks of non-stop flipping, give or take. Either that or they're really lucky, hold onto that thought, we'll get back to it.
+Humor me for a moment. Say that you were flipping coins and someone happened to get four heads in a row, not exactly uncommon but it's much less likely than say one or two heads in a row. How about twenty? Each flip is 50/50, so twenty in a row is ½ multiplied twenty times, which is 1 in `2**20`, or <%= claim("twenty heads odds", "one in about a million") %>. That's a couple of weeks of non-stop flipping, give or take. If someone managed to land that you'd think it's either a rigged coin or they've been at it for a while. Either that or they're really lucky, hold onto that thought, we'll get back to it.
 
 It might take the person doing the flipping a few weeks, but we know how likely it is to happen in fractions of a second. If we see that result we have a pretty danged good guess as to how often they'd flipped to get it.
 
@@ -30,13 +28,13 @@ In programming we have hashing functions which can transform something into an e
 
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "hashing") %>
 
-This is the hashing function we're going to be using. SHA-256 is a specific hash algorithm (the name doesn't matter, what matters is that its output bits are evenly spread). The "digest" is the number it spits out, and "hex characters" are the digits 0-9 and letters a-f, a compact way to write binary. Each hex character packs 4 bits, so the first 16 of them give us 64 bits — sixty-four coin flips to judge rarity by. `2**64` is about 18.4 quintillion which is a lot of headroom to reason about probabilistically.
+This is the hashing function we're going to be using. SHA-256 is a specific hash algorithm (the name doesn't matter, what matters is that its output bits are evenly spread). The "digest" is the number it spits out, and "hex characters" are the digits 0-9 and letters a-f, a compact way to write binary. Each hex character packs 4 bits, so the first 16 of them give us 64 bits, sixty-four coin flips to judge rarity by. `2**64` is about 18.4 quintillion which is a lot of headroom to reason about probabilistically.
 
 ## Thinking in bits
 
 Look, unless you're deep in core, or were a C programmer, chances are you're not making a habit of bit manipulation in Ruby. Most Ruby developers are going to get lost the second we start looking at bit twiddling, myself included, but the usefulness of them warrants some discomfort to understand the underlying mechanics and how they can serve us.
 
-For the sake of this article we're going to need to pull a hash apart — some bits pick a bucket, the rest get measured — and flip individual bits on and off. There are only a few moves, and here's each one on a small number.
+For the sake of this article we're going to need to pull a hash apart (some bits pick a bucket, the rest get measured) and flip individual bits on and off. There are only a few moves, and here's each one on a small number.
 
 ### What binary is
 
@@ -54,17 +52,29 @@ If you remember those three, every bit trick below is legible.
 
 ### Left shift (`<<`) slides bits up
 
+This is multiplication by a power of two. Slide a `1` up three positions and you get 8, because each position doubles the value:
+
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "bit_left_shift") %>
+
+We'll use this constantly for building masks. A `1` shifted into a specific position gives us a number with only that bit set.
 
 ### Right shift (`>>`) slides bits down
 
+The inverse: division by a power of two. Slide everything down five positions and whatever was at the top is all that's left:
+
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "bit_right_shift") %>
 
+Later, when we split a 64-bit hash into "which bucket" and "the rest," right shift is how we grab the top portion.
+
 ### Masking (`&`) keeps specific bits
+
+AND compares two numbers bit by bit and keeps a 1 only where both have one. If one side is all zeros except the bottom few bits, only those survive. That's how we grab the bottom portion of a hash:
 
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "bit_mask") %>
 
 ### Setting a single bit with `|=`
+
+OR is the opposite of AND: it keeps a 1 wherever _either_ side has one. OR-assign (`|=`) lets us turn on one specific bit without disturbing anything else in the number:
 
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "bit_set_single") %>
 
@@ -161,10 +171,10 @@ Redis exposes this as `PFMERGE`.
 
 `PFADD` and `PFCOUNT` in Redis are HyperLogLog with exactly the parameters we built. (If you don't use Redis: `PFADD` adds an item, `PFCOUNT` returns the estimated distinct count, `PFMERGE` combines two counters. The "PF" stands for Philippe Flajolet, one of the paper's authors.) 16,384 registers (precision 14), 6 bits per register (because the longest possible leading-zero run on a 50-bit remainder is 50, and 50 fits in 6 bits), about 12 KB total, standard error of 0.81%. The 64-bit hash that lets it count past `2**32` distinct values came from a [2013 Google paper](https://research.google.com/pubs/archive/40671.pdf) (Heule, Nunkesser, Hall). The wider hash is also why there's no high-end correction in the code above: the original 32-bit version needed one near `2**32`, but 64 bits pushes that limit out of practical reach.
 
-If you've ever called `PFCOUNT` on a Redis key, that number came from the harmonic mean of 16,384 register maxima. <%= claim("hll size", "Twelve kilobytes") %>, whether the count is a thousand or five billion.
+If you've ever called `PFCOUNT` on a Redis key, that number came from the harmonic mean of 16,384 register maxima. It's <%= claim("hll size", "Twelve kilobytes") %> whether the count is a thousand or five billion.
 
 ## Measuring it
 
-At precision 14, this implementation estimates sequential integers to within about 0.1% at a million distinct, 0.4% at 100k, and 0.65% at 5M — all inside the 0.81% the math predicts.
+At precision 14, this implementation estimates sequential integers to within about 0.1% at a million distinct, 0.4% at 100k, and 0.65% at 5M, all inside the 0.81% the math predicts.
 
 The next post takes the same bit-packing toolkit and applies it to a different question: not "how many distinct" but "have I seen this specific one before." That's Bloom filters.

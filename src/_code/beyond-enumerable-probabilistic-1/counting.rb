@@ -238,7 +238,8 @@ class HyperLogLog
   def add(item)
     hash = Hashing.to_64_bits(item)
 
-    # Split the 64-bit hash into two parts:
+    # Split the 64-bit hash into two parts using the right shift
+    # and mask from the primer:
     #
     # Example with precision=14 and a 64-bit hash:
     #   [  14 bits  |          50 bits              ]
