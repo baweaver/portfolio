@@ -112,7 +112,13 @@ Now instead of one noisy estimate you have thousands of independent ones. Combin
 
 That's [HyperLogLog](http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf) (Flajolet, Fusy, Gandouet, Meunier, 2007). The `precision` parameter controls how many registers you use (`2**precision` of them), so higher precision means more registers, less noise, and more memory.
 
-<%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "hyperloglog") %>
+First, the structure and adding items. This is where the hash split and rank calculation happen:
+
+<%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "hyperloglog_add") %>
+
+Next, reading an estimate back out. This is where the harmonic mean does its work:
+
+<%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "hyperloglog_estimate") %>
 
 At precision 14, the 64-bit hash splits into a 14-bit register index and a 50-bit remainder. The register stores the longest leading-zero run seen in that remainder. The whole structure is 16,384 small numbers.
 
@@ -122,7 +128,7 @@ Say you have ten servers, each counting distinct users on their own shard (a sha
 
 Why does this work? Each register stores "the longest leading-zero run I've ever seen." If server A saw a run of 12 in register 47, and server B saw a run of 15 in the same register, then across both servers combined someone saw 15. The maximum is always correct because a longer run can only come from more distinct values passing through that register.
 
-Two sketches combine by comparing each register position and keeping the larger value.
+<%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "hyperloglog_merge") %>
 
 Redis exposes this as `PFMERGE`.
 

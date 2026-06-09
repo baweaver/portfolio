@@ -188,7 +188,7 @@ def harmonic_mean(values)
 end
 # end: harmonic_mean
 
-# segment: hyperloglog
+# segment: hyperloglog_add
 class HyperLogLog
   HASH_BITS = 64
 
@@ -231,7 +231,11 @@ class HyperLogLog
     # Keep the largest rank this register has ever seen.
     @registers[register_index] = [@registers[register_index], rank].max
   end
+end
+# end: hyperloglog_add
 
+# segment: hyperloglog_estimate
+class HyperLogLog
   def estimate
     # Harmonic mean of 2^(-rank) across all registers.
     # Each register contributes 2^(-rank):
@@ -257,6 +261,14 @@ class HyperLogLog
     end
   end
 
+  private
+
+  def alpha = 0.7213 / (1.0 + (1.079 / @register_count))
+end
+# end: hyperloglog_estimate
+
+# segment: hyperloglog_merge
+class HyperLogLog
   def merge(other)
     raise ArgumentError, "precision mismatch" unless @precision == other.precision
 
@@ -264,7 +276,7 @@ class HyperLogLog
     #   Each register holds "longest leading-zero run seen."
     #   The longest run across the union is the larger of the two.
     merged = HyperLogLog.new(precision: @precision)
-    new_registers = @registers.zip(other.registers).map { |a, b| [a, b].max }
+    new_registers = @registers.zip(other.registers).map { |mine, theirs| [mine, theirs].max }
     merged.send(:replace_registers, new_registers)
     merged
   end
@@ -276,7 +288,5 @@ class HyperLogLog
   def replace_registers(new_registers)
     @registers = new_registers
   end
-
-  def alpha = 0.7213 / (1.0 + (1.079 / @register_count))
 end
-# end: hyperloglog
+# end: hyperloglog_merge
