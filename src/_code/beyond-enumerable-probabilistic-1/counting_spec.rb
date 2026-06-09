@@ -49,6 +49,50 @@ RSpec.describe "Beyond Enumerable: Counting Distinct" do
     end
   end
 
+  describe "#leading_zeros" do
+    it "counts zeros before the first 1" do
+      expect(leading_zeros(0b00000101, total_bits: 8)).to eq(5)
+      expect(leading_zeros(0b10000000, total_bits: 8)).to eq(0)
+      expect(leading_zeros(0b00000000, total_bits: 8)).to eq(8)
+    end
+
+    it "works on 64-bit values" do
+      # A value with bit_length of 50 has 14 leading zeros in a 64-bit space
+      value = (1 << 49) # bit_length = 50
+      expect(leading_zeros(value, total_bits: 64)).to eq(14)
+    end
+  end
+
+  describe "#harmonic_mean" do
+    it "resists outliers better than arithmetic mean" do
+      values = [1, 1, 1, 10]  # register values (leading-zero counts)
+      arithmetic = values.sum.to_f / values.size
+
+      h_mean = harmonic_mean(values)
+
+      # Harmonic should be much closer to the common values
+      expect(h_mean).to be < arithmetic
+    end
+
+    it "returns the value itself for uniform inputs" do
+      values = [5, 5, 5, 5]
+      # When all registers agree, both means should be similar
+      expect(harmonic_mean(values)).to be_within(0.1).of(values.size.to_f / (values.size * (1.0 / 2**5)))
+    end
+  end
+
+  describe "#linear_counting_estimate" do
+    it "estimates distinct count from total bits and zeros remaining" do
+      # 1 million bits, 900k still zero => not many distinct items yet
+      estimate = linear_counting_estimate(1_000_000, 900_000)
+      expect(estimate).to be_within(1000).of(105_361)
+
+      # 1 million bits, 100k still zero => many distinct items
+      estimate = linear_counting_estimate(1_000_000, 100_000)
+      expect(estimate).to be_within(1000).of(2_302_585)
+    end
+  end
+
   describe LinearCounting do
     it "estimates distinct count within 5% for 10k items" do
       counter = LinearCounting.new(bits: 1 << 20)

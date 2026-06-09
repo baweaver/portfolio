@@ -24,7 +24,9 @@ It might take the person doing the flipping a few weeks, but we know how likely 
 
 What does that have to do with this article though? Coin flips are, in essence, a binary. Heads or tails, ones or zeros, and if you happen to convert something into a binary stream you have a collection of those exact ones and zeros. As it happens it's also pretty rare to have a bunch of zeroes at the start of a binary string, getting us right back to that probability.
 
-In programming we have hashing functions which can transform something into a uniform shape, like our ones and zeroes, and the chances there are a ton of zeroes? It turns out that's a really useful property:
+In programming we have hashing functions which can transform something into a uniform shape, like our ones and zeroes, and the chances there are a ton of zeroes? It turns out that's a really useful property.
+
+> **What's a hash function?** It takes any input (a string, a number, an object) and produces a fixed-size number. The same input always gives the same output, but different inputs give wildly different outputs with no discernible pattern. Think of it like a fingerprint: deterministic, fixed size, and scrambled enough that similar inputs don't produce similar outputs.
 
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "hashing") %>
 
@@ -62,7 +64,11 @@ That chunk is a bitmap: a fixed-size array where each position is a single bit t
 
 As more distinct items arrive, more bits flip from 0 to 1. Duplicates land on bits that are already 1 and leave no trace. So the number of bits still at zero tells us something about how many distinct items have passed through. More zeros remaining means fewer distinct items. Fewer zeros means more.
 
-The math to turn that into an estimate: with `total_bits` bits and `zeros` of them still clear, the distinct count is approximately `-total_bits * Math.log(zeros.to_f / total_bits)`.
+The math to turn that into an estimate:
+
+<%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "linear_counting_formula") %>
+
+> `Math.log` is the natural logarithm. It answers "how many times would I multiply to get here?" It shows up because the bitmap fills exponentially as items arrive, and logarithms undo exponentials.
 
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "linear_counting") %>
 
@@ -72,19 +78,39 @@ Once every bit is set though the formula divides by zero and the estimate breaks
 
 ## Step two: the leading-zeros insight
 
-Remember the coin flips from earlier? A hash with no leading zeros (top bit is 1) shows up about half the time. Ten leading zeros shows up about once in `2**10` distinct values. Twenty shows up once in about a million. The longest leading-zero run you've ever seen is a rough proxy for how many distinct items have passed through.
+The bitmap counted by how _full_ it got. There's a different reading we can take from a hash that doesn't have a ceiling.
 
-A maximum run of 30 suggests around `2**30` distinct items. The number never saturates because longer runs keep appearing as more distinct values arrive.
+Remember the coin flips from earlier? Each bit of a hash is an independent flip. A run of leading zeros is like a run of consecutive heads, and the longer the run the rarer it is. We can measure that directly:
 
-One number is noisy though. A single item that happens to hash to thirty leading zeros doubles your estimate. We need more than one measurement.
+<%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "leading_zeros") %>
 
-## Step three: many registers, one estimate
+A hash with no leading zeros (top bit is 1) shows up about half the time. Ten leading zeros shows up about once in `2**10` distinct values. Twenty shows up once in about a million. The longest leading-zero run you've ever seen is a rough proxy for how many distinct items have passed through.
+
+A maximum run of 30 suggests around `2**30` distinct items. Unlike the bitmap, this number never saturates because longer runs keep appearing as more distinct values arrive. The problem? _Suggests_ there is doing some heavy lifting.
+
+## Step three: taming the noise
+
+Remember the "or they're really lucky" caveat from the coin flip section? That's exactly the problem with a single leading-zero count. One unlucky hash and your estimate is wildly off. The fix is the same fix you'd use for any noisy measurement: take a lot of them and average.
+
+But what kind of average? If one measurement is an outlier, a regular (arithmetic) average lets it drag everything up. We need an average that resists outliers:
+
+<%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "harmonic_mean") %>
+
+This is important because when we take many measurements, some _will_ get lucky. The harmonic mean keeps those from distorting our answer. Now we need the measurements themselves.
+
+## Step four: many registers, one estimate
+
+We have one stream of items but we need many independent leading-zero counts to average. How do you get multiple measurements from a single stream?
+
+Use part of the hash to _route_ each item to one of many buckets (called registers), and use the rest of the hash to do the leading-zero measurement within that bucket.
+
+Think of it like running the coin-flip experiment at many tables simultaneously. Each item gets assigned to a table based on part of its hash, and each table independently tracks the longest run it has seen. No single lucky hash can corrupt more than one table.
 
 Split each hash into two parts. The top `precision` bits pick one of `2**precision` registers. The remaining bits give the leading-zero count. Each register keeps only the _maximum_ run it has ever seen.
 
-Now instead of one noisy estimate you have thousands of independent ones. Average them and the noise cancels. The standard error drops like `1 / sqrt(register_count)`, so 16,384 registers gives about <%= claim("hll standard error", "0.8%") %> error.
+Now instead of one noisy estimate you have thousands of independent ones. Combine them with the harmonic mean from above and the noise cancels. The standard error drops like `1 / sqrt(register_count)`, so 16,384 registers gives about <%= claim("hll standard error", "0.8%") %> error. In practice that means if the true count is a million, the estimate will typically land between 992,000 and 1,008,000.
 
-The specific average matters. An arithmetic mean lets a few unlucky registers dominate. A _harmonic_ mean weights them so outliers can't blow things up. That refinement is [HyperLogLog](http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf) (Flajolet, Fusy, Gandouet, Meunier, 2007):
+That's [HyperLogLog](http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf) (Flajolet, Fusy, Gandouet, Meunier, 2007):
 
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-probabilistic-1/counting.rb", segment: "hyperloglog") %>
 
@@ -92,9 +118,11 @@ The code comments walk through every bit operation in detail. At precision 14, t
 
 ## Merge: the property that earns its place
 
-Two HyperLogLog sketches over different data combine by taking the element-wise maximum of their registers. A register holds "longest run seen," and the longest run across the union is the larger of the two.
+Say you have ten servers, each counting distinct users on their own shard. You want the total distinct count across all of them. With a `Set` you'd have to ship every set to one place and union them, which is enormous. With HyperLogLog you ship sixteen kilobytes from each server and combine them in one pass.
 
-Count distinct users on each of a thousand servers, ship sixteen kilobytes from each, take the maximums, and you have the distinct count across all of them without any server needing the others' data.
+Why does this work? Each register stores "the longest leading-zero run I've ever seen." If server A saw a run of 12 in register 47, and server B saw a run of 15 in the same register, then across the union someone saw 15. The maximum is always correct because a longer run can only come from more distinct values passing through that register.
+
+Two sketches combine by taking the element-wise maximum of their registers. That's it. No re-counting, no re-hashing, no coordination.
 
 This is what Redis exposes as `PFMERGE`.
 

@@ -107,6 +107,14 @@ end
 # end: bit_check
 
 
+# segment: linear_counting_formula
+def linear_counting_estimate(total_bits, zeros)
+  # With total_bits bits and zeros of them still clear:
+  -total_bits * Math.log(zeros.to_f / total_bits)
+  # => approximate distinct count
+end
+# end: linear_counting_formula
+
 # segment: linear_counting
 class LinearCounting
   def initialize(bits: 1 << 20)
@@ -141,6 +149,48 @@ class LinearCounting
   end
 end
 # end: linear_counting
+
+# segment: leading_zeros
+def leading_zeros(hash_value, total_bits:)
+  # How many zeros before the first 1?
+  #
+  # bit_length tells us where the highest 1-bit is (1-indexed).
+  # Everything above that is zeros.
+  #
+  # Example with total_bits = 8:
+  #   0b00000101  bit_length = 3  (highest 1 is in position 3)
+  #   leading zeros = 8 - 3 = 5
+  #
+  #   0b10000000  bit_length = 8
+  #   leading zeros = 8 - 8 = 0
+  #
+  #   0b00000000  bit_length = 0  (no bits set at all)
+  #   leading zeros = 8 - 0 = 8   (all zeros, maximum rarity)
+
+  total_bits - hash_value.bit_length
+end
+# end: leading_zeros
+
+# segment: harmonic_mean
+def harmonic_mean(values)
+  # Arithmetic mean: sum all values, divide by count.
+  #   [1, 1, 1, 100] => (1+1+1+100) / 4 = 25.75
+  #   One outlier dominates.
+  #
+  # Harmonic mean: count divided by the sum of reciprocals.
+  #   [1, 1, 1, 100] => 4 / (1/1 + 1/1 + 1/1 + 1/100)
+  #                    = 4 / (1 + 1 + 1 + 0.01)
+  #                    = 4 / 3.01
+  #                    ≈ 1.33
+  #   The outlier barely registers.
+  #
+  # This is why HyperLogLog uses harmonic mean:
+  # a single register that got "lucky" (saw a long run of zeros)
+  # can't drag the entire estimate up the way arithmetic would.
+
+  values.size.to_f / values.sum { |v| 1.0 / (2**v) }
+end
+# end: harmonic_mean
 
 # segment: hyperloglog
 class HyperLogLog
