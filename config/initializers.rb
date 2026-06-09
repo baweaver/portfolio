@@ -19,6 +19,7 @@ Bridgetown.configure do |config|
   template_engine "erb"
   permalink "pretty"
   base_path ""
+  future Bridgetown.env.development?
 
   collections do
     posts do

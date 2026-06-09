@@ -154,7 +154,7 @@ end
 def leading_zeros(hash_value, total_bits:)
   # How many zeros before the first 1?
   #
-  # bit_length tells us where the highest 1-bit is (1-indexed).
+  # bit_length tells us where the highest 1-bit is (counting from 1, not 0).
   # Everything above that is zeros.
   #
   # Example with total_bits = 8:
@@ -178,6 +178,7 @@ def harmonic_mean(values)
   #   One outlier dominates.
   #
   # Harmonic mean: count divided by the sum of reciprocals.
+  #   A reciprocal is 1 divided by a number (the "flip" of it).
   #   [1, 1, 1, 100] => 4 / (1/1 + 1/1 + 1/1 + 1/100)
   #                    = 4 / (1 + 1 + 1 + 0.01)
   #                    = 4 / 3.01
