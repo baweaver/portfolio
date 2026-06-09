@@ -17,12 +17,6 @@ RSpec.describe "Beyond Enumerable: Counting Distinct" do
         expect(Hashing.to_64_bits("test")).to be < (2**64)
       end
     end
-
-    describe ".salted" do
-      it "produces different hashes for different salts" do
-        expect(Hashing.salted("item", 0)).not_to eq(Hashing.salted("item", 1))
-      end
-    end
   end
 
   describe "#bit_right_shift_example" do
@@ -65,19 +59,18 @@ RSpec.describe "Beyond Enumerable: Counting Distinct" do
 
   describe "#harmonic_mean" do
     it "resists outliers better than arithmetic mean" do
-      values = [1, 1, 1, 10]  # register values (leading-zero counts)
-      arithmetic = values.sum.to_f / values.size
+      values = [1, 1, 1, 100]
+      arithmetic = values.sum.to_f / values.size  # 25.75
 
-      h_mean = harmonic_mean(values)
+      h_mean = harmonic_mean(values)  # ≈ 1.33
 
-      # Harmonic should be much closer to the common values
+      expect(h_mean).to be_within(0.1).of(1.33)
       expect(h_mean).to be < arithmetic
     end
 
-    it "returns the value itself for uniform inputs" do
+    it "equals the value for uniform inputs" do
       values = [5, 5, 5, 5]
-      # When all registers agree, both means should be similar
-      expect(harmonic_mean(values)).to be_within(0.1).of(values.size.to_f / (values.size * (1.0 / 2**5)))
+      expect(harmonic_mean(values)).to be_within(0.01).of(5.0)
     end
   end
 

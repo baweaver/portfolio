@@ -18,7 +18,7 @@ The first question that kept coming up: how do you count distinct values when yo
 
 Humor me for a moment. Say that you were flipping coins and someone happened to get four heads in a row, not exactly uncommon but it's much less likely than say one or two heads in a row. How about twenty? If someone managed to land that you'd think it's either a rigged coin or they've been flipping for a while to get to that number. Point being the more consecutive heads someone gets the less likely that was to happen.
 
-Why does that matter? Because that rate is predictable, and if someone managed to land twenty heads you can reasonably assume that they've been at the coin flipping game for a number of days or weeks by that point considering the odds of that happening are <%= claim("twenty heads odds", "one in about a million") %>, or roughly two weeks of non-stop flipping. Either that or they're really lucky, hold onto that thought, we'll get back to it.
+Why does that matter? Because that rate is predictable, and if someone managed to land twenty heads you can reasonably assume that they've been at the coin flipping game for a number of days or weeks by that point considering the odds of that happening are <%= claim("twenty heads odds", "one in about a million") %>, or a couple of weeks of non-stop flipping, give or take. Either that or they're really lucky, hold onto that thought, we'll get back to it.
 
 It might take the person doing the flipping a few weeks, but we know how likely it is to happen in fractions of a second. If we see that result we have a pretty danged good guess as to how often they'd flipped to get it.
 
@@ -86,7 +86,7 @@ Remember the coin flips from earlier? Each bit of a hash is an independent flip.
 
 A hash with no leading zeros (top bit is 1) shows up about half the time. Ten leading zeros shows up about once in `2**10` distinct values. Twenty shows up once in about a million. The longest leading-zero run you've ever seen is a rough indicator of how many distinct items have passed through.
 
-A maximum run of 30 suggests around `2**30` distinct items. Unlike the bitmap, this number never hits a ceiling because longer runs keep appearing as more distinct values arrive. The problem? _Suggests_ there is doing some heavy lifting.
+A maximum run of 30 suggests around `2**30` distinct items. Unlike the bitmap, this number never hits a ceiling because longer runs keep appearing as more distinct values arrive. The catch hides in that word _suggests_: a single leading-zero count is noisy, and one lucky hash throws the whole guess off.
 
 ## Step three: taming the noise
 
@@ -128,12 +128,12 @@ Redis exposes this as `PFMERGE`.
 
 ## Where you've already used this
 
-`PFADD` and `PFCOUNT` in Redis are HyperLogLog with exactly the parameters we built. (If you don't use Redis: `PFADD` adds an item, `PFCOUNT` returns the estimated distinct count, `PFMERGE` combines two counters. The "PF" stands for Philippe Flajolet, one of the paper's authors.) 16,384 registers (precision 14), 6 bits per register (because the longest possible leading-zero run on a 50-bit remainder is 50, and 50 fits in 6 bits), about 12 KB total, standard error of 0.81%. The 64-bit hash that lets it count past `2**32` distinct values came from a [2013 Google paper](https://research.google.com/pubs/archive/40671.pdf) (Heule, Nunkesser, Hall).
+`PFADD` and `PFCOUNT` in Redis are HyperLogLog with exactly the parameters we built. (If you don't use Redis: `PFADD` adds an item, `PFCOUNT` returns the estimated distinct count, `PFMERGE` combines two counters. The "PF" stands for Philippe Flajolet, one of the paper's authors.) 16,384 registers (precision 14), 6 bits per register (because the longest possible leading-zero run on a 50-bit remainder is 50, and 50 fits in 6 bits), about 12 KB total, standard error of 0.81%. The 64-bit hash that lets it count past `2**32` distinct values came from a [2013 Google paper](https://research.google.com/pubs/archive/40671.pdf) (Heule, Nunkesser, Hall). The wider hash is also why there's no high-end correction in the code above: the original 32-bit version needed one near `2**32`, but 64 bits pushes that limit out of practical reach.
 
 If you've ever called `PFCOUNT` on a Redis key, that number came from the harmonic mean of 16,384 register maxima. <%= claim("hll size", "Twelve kilobytes") %>, whether the count is a thousand or five billion.
 
 ## Measuring it
 
-At precision 14, this implementation estimated 1,002,986 distinct values against a true million (0.3% error), and held similar accuracy at 100k and 5M distinct.
+At precision 14, this implementation estimates a million distinct sequential integers to within 0.3% of the true count, and holds similar accuracy at 100k and 5M distinct.
 
 The next post takes the same bit-packing toolkit and applies it to a different question: not "how many distinct" but "have I seen this specific one before." That's Bloom filters.

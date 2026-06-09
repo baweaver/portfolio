@@ -10,11 +10,6 @@ module Hashing
   def to_64_bits(item)
     Digest::SHA256.hexdigest(item.to_s)[0, 16].to_i(16)
   end
-
-  # A different, independent hash for the same item, chosen by a salt.
-  def salted(item, salt)
-    Digest::SHA256.hexdigest("#{salt}:#{item}").to_i(16)
-  end
 end
 # end: hashing
 
@@ -189,7 +184,7 @@ def harmonic_mean(values)
   # a single register that got "lucky" (saw a long run of zeros)
   # can't drag the entire estimate up the way arithmetic would.
 
-  values.size.to_f / values.sum { |v| 1.0 / (2**v) }
+  values.size.to_f / values.sum { |value| 1.0 / value }
 end
 # end: harmonic_mean
 
@@ -223,10 +218,14 @@ class HyperLogLog
     remainder = hash & ((1 << (HASH_BITS - @precision)) - 1)
 
     # How many leading zeros in the remainder?
-    #   bit_length returns the position of the highest set bit (1-indexed).
-    #   A 50-bit number with bit_length of 47 has 3 leading zeros.
-    #   rank = 50 - bit_length + 1 = position of the leftmost 1-bit.
-    #   All-zero remainder gives the maximum rank (50 - 0 + 1 = 51).
+    #   Same idea as the leading_zeros helper from earlier, plus one.
+    #   rank = leading zeros + 1 = position of the first 1-bit.
+    #   (The +1 is a convention from the paper; it avoids rank=0 meaning
+    #   "saw something" vs "never saw anything.")
+    #
+    #   bit_length tells us where the highest 1-bit is (counting from 1).
+    #   A 50-bit remainder with bit_length 47 has 3 leading zeros, rank 4.
+    #   All-zero remainder: bit_length 0, rank 51 (maximum rarity).
     rank = (HASH_BITS - @precision) - remainder.bit_length + 1
 
     # Keep the largest rank this register has ever seen.
