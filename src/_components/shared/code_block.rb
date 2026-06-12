@@ -15,10 +15,11 @@ class Shared::CodeBlock < Bridgetown::Component
 
   def extract_code(file, segment)
     path = File.join(Bridgetown::Current.site.source, "_code", file)
-    return "# File not found: #{file}" unless File.exist?(path)
+    raise "CodeBlock: file not found: #{file}" unless File.exist?(path)
 
     lines = File.readlines(path)
     result = segment ? extract_segment(lines, segment) : extract_all_segments(lines)
+    raise "CodeBlock: segment '#{segment}' not found in #{file}" if segment && result.empty?
     @unwrap ? unwrap_method(result) : result
   end
 
