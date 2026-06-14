@@ -45,3 +45,7 @@
 - id: beyond-enumerable
   title: "Beyond Enumerable"
   prefix: "Beyond Enumerable"
+
+- id: rails-sharp-parts
+  title: "Rails: The Sharp Parts"
+  prefix: "Rails: The Sharp Parts"
