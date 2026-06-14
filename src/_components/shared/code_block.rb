@@ -1,7 +1,8 @@
 class Shared::CodeBlock < Bridgetown::Component
-  def initialize(file:, segment: nil, lang: "ruby", unwrap: false)
+  def initialize(file:, segment: nil, lang: "ruby", unwrap: false, compact: false)
     @lang = lang
     @unwrap = unwrap
+    @compact = compact
     @code = extract_code(file, segment)
   end
 
@@ -24,20 +25,24 @@ class Shared::CodeBlock < Bridgetown::Component
   end
 
   def extract_segment(lines, name)
+    captures = []
     capturing = false
-    captured = []
+    current = []
 
     lines.each do |line|
       if line.match?(/^\s*# segment:\s*#{Regexp.escape(name)}\s*$/)
         capturing = true
+        current = []
       elsif line.match?(/^\s*# end:\s*#{Regexp.escape(name)}\s*$/)
-        break
+        captures << deindent(current).join.chomp if capturing
+        capturing = false
       elsif capturing
-        captured << line
+        current << line
       end
     end
 
-    deindent(captured).join.chomp
+    separator = @compact ? "\n" : "\n\n"
+    captures.join(separator)
   end
 
   def extract_all_segments(lines)

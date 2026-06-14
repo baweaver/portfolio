@@ -1,0 +1,24 @@
+# segment: touch_trace_output
+seat   before_save   transaction_open? => true
+seat   after_save    transaction_open? => true
+event  after_touch   transaction_open? => true
+seat   after_commit  transaction_open? => false
+# end: touch_trace_output
+
+# segment: validation_fanout_output
+50 plain creates:      150 statements (INSERT, BEGIN, COMMIT)
+50 validated creates:  250 statements (the same, plus 100 SELECTs)
+# end: validation_fanout_output
+
+# segment: packwerk_tree
+packs/seats/
+├── package.yml          # enforce_privacy: true
+└── app/
+    ├── public/
+    │   └── seats/
+    │       ├── reserve_seat.rb
+    │       ├── release_seat.rb
+    │       └── import_seats.rb
+    └── models/
+        └── seat.rb      # private to the pack
+# end: packwerk_tree
