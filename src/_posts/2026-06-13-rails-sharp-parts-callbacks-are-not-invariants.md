@@ -175,6 +175,8 @@ The rule to verify this is by checking if a callback reads or writes anything be
 
 ## One Door In
 
+The fundamental problem with ActiveRecord models as a write interface is that _anyone_ can call `save` from _anywhere_. Every controller, every background job, every rake task, every console session is a potential write path, and none of them are obligated to do it correctly in a way that satisfies our domain concerns. When you have hundreds of callers spread across dozens of teams, you can't audit what happens on a write because there's no single place it goes through. Single-ingress fixes that: we control all writes into our domain, consumers call our verb, block any other paths in, and the rules live in one place that we own.
+
 A mutation should be visible, positioned relative to the commit, bulk-capable, and announce that it ran. `ActiveSupport::Notifications` gives us the announcement half, and a base class gives us the single door:
 
 <%= render Shared::CodeBlock.new(file: "rails-sharp-parts-callbacks-are-not-invariants/setup.rb", segment: "application_command") %>
@@ -211,7 +213,9 @@ Every write announces itself through the base's instrumentation, including refus
 
 <%= render Shared::CodeBlock.new(file: "rails-sharp-parts-callbacks-are-not-invariants/callbacks.rb", segment: "notification_subscriber") %>
 
-Logging, metrics, and APM tracing attach as subscribers rather than edits to three hundred command files. This is event-driven architecture at the application level, and it trades one kind of coupling for another. Callbacks couple implicitly (the subscriber is invisible to the publisher and to static tools). Events couple explicitly (the subscriber is a constant reference Packwerk can check, and the event name is a grep-able string), but Pack B still reacts to Pack A's writes without Pack A knowing.
+Logging, metrics, and APM tracing attach as subscribers rather than edits to three hundred command files. To be clear: subscribers are for **observability**, not for domain behavior. The domain logic lives inline in `execute`, where it's visible and sequenced. A subscriber can't veto a write, can't mutate data, and can't introduce ordering dependencies. It's a passive observer, not a replacement for callbacks. If you need durable event delivery (guaranteed at-least-once processing), that's a transactional outbox or CDC, not a subscriber.
+
+Even scoped to observability, this is still event-driven architecture at the application level, and it trades one kind of coupling for another. Callbacks couple implicitly (the subscriber is invisible to the publisher and to static tools). Events couple explicitly (the subscriber is a constant reference Packwerk can check, and the event name is a grep-able string), but Pack B still reacts to Pack A's writes without Pack A knowing.
 
 - You gain discoverability (subscribers are declared, not hidden in association macros)
 - You gain replaceability (swap a subscriber without touching the publisher)
