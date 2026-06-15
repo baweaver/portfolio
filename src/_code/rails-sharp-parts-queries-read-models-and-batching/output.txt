@@ -1,0 +1,17 @@
+# segment: packwerk_tree
+packs/seating/
+├── package.yml          # enforce_privacy: true
+└── app/
+    ├── public/
+    │   └── seating/
+    │       ├── reserve_seat.rb        # command
+    │       ├── seat_details.rb        # query
+    │       └── seat_details_by_ids.rb # batched query
+    └── models/
+        └── seat.rb                    # private to the pack
+# end: packwerk_tree
+
+# segment: cop_bad_output
+app/public/orders/order_summary.rb:4:5: ArticleCops/QueryMustNotMutate:
+  Queries read. Put writes in a command in app/public.
+# end: cop_bad_output
