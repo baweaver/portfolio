@@ -1,7 +1,7 @@
 ---
 layout: "post"
 title: "Beyond Enumerable: Counting Distinct with HyperLogLog"
-date: "2026-06-10"
+date: "2026-06-15"
 categories: []
 tags: ["ruby", "enumerable", "beyond-enumerable"]
 series: "beyond-enumerable"
