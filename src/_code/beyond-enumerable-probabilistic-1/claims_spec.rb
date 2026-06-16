@@ -27,7 +27,49 @@ RSpec.describe "Article claims: Counting Distinct" do
   describe "hll size" do
     it "16384 registers at 6 bits each is about 12 KB" do
       bytes = (16_384 * 6.0 / 8 / 1024).round
-      claim("hll size") { bytes == 12 ? "Twelve kilobytes" : "#{bytes} KB" }.equals("Twelve kilobytes")
+      claim("hll size") { bytes == 12 ? "twelve kilobytes" : "#{bytes} KB" }.equals("twelve kilobytes")
+    end
+  end
+
+  describe "trace observations" do
+    let(:hll) do
+      h = HyperLogLogString.new(precision: 4)
+      %w[alice bob carol dave eve frank grace heidi ivan judy].each { |n| h.add(n) }
+      h
+    end
+
+    it "eve lands in bucket 8 with rank 2 but bob already set it to 4" do
+      # bob's rank in bucket 8
+      bob_bits = format("%064b", Hashing.to_64_bits("bob"))
+      bob_index = bob_bits[0, 4].to_i(2)
+      bob_rank = (bob_bits[4..].index("1") || 60) + 1
+
+      # eve's rank in bucket 8
+      eve_bits = format("%064b", Hashing.to_64_bits("eve"))
+      eve_index = eve_bits[0, 4].to_i(2)
+      eve_rank = (eve_bits[4..].index("1") || 60) + 1
+
+      claim("eve bucket is 8") { eve_index }.equals(8)
+      claim("eve rank is 2") { eve_rank }.equals(2)
+      claim("bob bucket is 8") { bob_index }.equals(8)
+      claim("bob rank is 4") { bob_rank }.equals(4)
+      claim("bucket 8 keeps bob's rank") { hll.registers[8] }.equals(4)
+    end
+
+    it "estimate after 10 distinct is 11" do
+      claim("trace estimate") { hll.estimate }.equals(11)
+    end
+  end
+
+  describe "string and bit versions match" do
+    it "produces the same estimate for 10k items" do
+      string_hll = HyperLogLogString.new(precision: 14)
+      bit_hll = HyperLogLog.new(precision: 14)
+      10_000.times { |i| string_hll.add(i); bit_hll.add(i) }
+
+      claim("string and bit match") {
+        string_hll.estimate == bit_hll.estimate ? "identical" : "different"
+      }.equals("identical")
     end
   end
 end

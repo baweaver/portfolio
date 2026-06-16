@@ -63,9 +63,14 @@ RSpec.describe "Beyond Enumerable: Counting Distinct" do
     end
 
     it "works on 64-bit values" do
-      # A value with bit_length of 50 has 14 leading zeros in a 64-bit space
-      value = (1 << 49) # bit_length = 50
+      value = (1 << 49)
       expect(leading_zeros(value, total_bits: 64)).to eq(14)
+    end
+  end
+
+  describe "#leading_zeros_string_examples" do
+    it "runs without error" do
+      expect(leading_zeros_string_examples).to eq(7)
     end
   end
 
@@ -183,6 +188,67 @@ RSpec.describe "Beyond Enumerable: Counting Distinct" do
 
         expect { a.merge(b) }.to raise_error(ArgumentError, /precision mismatch/)
       end
+    end
+
+    describe "small-range correction" do
+      it "uses linear counting fallback for small cardinalities" do
+        hll = HyperLogLog.new(precision: 14)
+        100.times { |i| hll.add("small_#{i}") }
+        expect(hll.estimate).to be_within(10).of(100)
+      end
+    end
+  end
+
+  describe HyperLogLogString do
+    it "produces the same estimate as the bit-based version" do
+      string_hll = HyperLogLogString.new(precision: 14)
+      bit_hll = HyperLogLog.new(precision: 14)
+
+      10_000.times { |i| string_hll.add(i); bit_hll.add(i) }
+      expect(string_hll.estimate).to eq(bit_hll.estimate)
+    end
+
+    it "handles merge" do
+      a = HyperLogLogString.new(precision: 14)
+      b = HyperLogLogString.new(precision: 14)
+
+      5_000.times { |i| a.add("a_#{i}") }
+      5_000.times { |i| b.add("b_#{i}") }
+
+      merged = a.merge(b)
+      expect(merged.estimate).to be_within(500).of(10_000)
+    end
+
+    it "takes the large-estimate path when cardinality is high" do
+      hll = HyperLogLogString.new(precision: 14)
+      100_000.times { |i| hll.add("big_#{i}") }
+      expect(hll.estimate).to be_within(2_000).of(100_000)
+    end
+  end
+
+  describe LinearCountingString do
+    it "estimates distinct count" do
+      counter = LinearCountingString.new(bits: 1 << 16)
+      5_000.times { |i| counter.add("item_#{i}") }
+      expect(counter.estimate).to be_within(500).of(5_000)
+    end
+
+    it "returns bit count when saturated" do
+      counter = LinearCountingString.new(bits: 64)
+      1_000.times { |i| counter.add("item_#{i}") }
+      expect(counter.estimate).to eq(64)
+    end
+  end
+
+  describe "#hyperloglog_trace" do
+    it "runs without error" do
+      expect { hyperloglog_trace }.to output(/estimate after 10 distinct/).to_stdout
+    end
+  end
+
+  describe "#hyperloglog_merge_example" do
+    it "returns an estimate near 10000" do
+      expect(hyperloglog_merge_example).to be_within(500).of(10_000)
     end
   end
 end

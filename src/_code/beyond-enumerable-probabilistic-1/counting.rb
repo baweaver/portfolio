@@ -13,6 +13,258 @@ module Hashing
 end
 # end: hashing
 
+# segment: linear_counting_string
+class LinearCountingString
+  def initialize(bits: 1 << 20)
+    # Picture a row of a million light switches, all starting OFF.
+    @bit_count = bits
+    @bitmap = Array.new(bits, false)
+  end
+
+  def add(item)
+    # Hash the item to get a number.
+    # Use that number to pick one switch and flip it ON.
+    # If two different items pick the same switch, oh well,
+    # they share it. We're counting approximately, not exactly.
+    position = Hashing.to_64_bits(item) % @bit_count
+    @bitmap[position] = true
+  end
+
+  def estimate
+    # How many switches are still OFF?
+    zeros = @bitmap.count(false)
+
+    # If every switch is ON, we've run out of room to count.
+    return @bit_count if zeros.zero?
+
+    # Fewer OFF switches means more distinct items passed through.
+    # This formula turns that ratio into an approximate count.
+    (-@bit_count * Math.log(zeros.to_f / @bit_count)).round
+  end
+end
+# end: linear_counting_string
+
+# segment: linear_counting_formula
+def linear_counting_estimate(total_bits, zeros)
+  # We have a bitmap with `total_bits` switches.
+  # `zeros` of them are still OFF (never been hit).
+  #
+  # The ratio zeros/total_bits tells us "what fraction is still empty?"
+  #   - If 90% are still OFF, not much has come through yet.
+  #   - If only 1% are still OFF, a LOT of distinct items have passed through.
+  #
+  # Math.log (natural logarithm) converts that fraction into a rate.
+  # Think of it as answering: "how many times did we have to throw darts
+  # at this board to leave only this many empty spots?"
+  #
+  # The result of Math.log(zeros / total_bits) is always negative
+  # (because zeros/total_bits is less than 1, and log of a fraction is negative).
+  # Multiplying by -total_bits flips it positive and scales it up
+  # to give us the estimated count.
+  #
+  # .to_f ensures we get decimal division, not integer division.
+  # Without it, 900000 / 1000000 would give 0 instead of 0.9.
+
+  -total_bits * Math.log(zeros.to_f / total_bits)
+  # => approximate distinct count
+end
+# end: linear_counting_formula
+
+# segment: leading_zeros_string
+def leading_zeros_string_examples
+  # Take a hash value and look at it as a string of zeros and ones.
+  # Count how many zeros come before the first one.
+  # That count is our "coin flip run length."
+
+  bits_a = "10110100"  # starts with 1, so zero leading zeros
+  bits_a.index("1")    # => 0
+
+  bits_b = "00010110"  # three zeros before the first 1
+  bits_b.index("1")    # => 3
+
+  bits_c = "00000001"  # seven zeros before the first 1 (very rare!)
+  bits_c.index("1")    # => 7
+end
+# end: leading_zeros_string
+
+# segment: harmonic_mean
+def harmonic_mean(values)
+  # Arithmetic mean: sum all values, divide by count.
+  #   [1, 1, 1, 100] => (1+1+1+100) / 4 = 25.75
+  #   One outlier dominates.
+  #
+  # Harmonic mean: count divided by the sum of reciprocals.
+  #   A reciprocal is 1 divided by a number (the "flip" of it).
+  #   [1, 1, 1, 100] => 4 / (1/1 + 1/1 + 1/1 + 1/100)
+  #                    = 4 / (1 + 1 + 1 + 0.01)
+  #                    = 4 / 3.01
+  #                    ≈ 1.33
+  #   The outlier barely registers.
+  #
+  # This is why HyperLogLog uses harmonic mean:
+  #
+  # A single measurement that got "lucky" (saw a long run of zeros)
+  # can't drag the entire estimate up the way arithmetic would.
+
+  values.size.to_f / values.sum { |value| 1.0 / value }
+end
+# end: harmonic_mean
+
+# segment: hyperloglog_string_add
+class HyperLogLogString
+  HASH_BITS = 64
+
+  def initialize(precision: 14)
+    @precision = precision
+
+    # How many buckets? 2^precision of them.
+    # More buckets = more accurate = more memory.
+    # 2^14 = 16,384 buckets. That's what Redis uses.
+    @register_count = 2**precision
+
+    # Each bucket remembers one number: the longest run of
+    # leading zeros it has ever seen. Starts at 0 ("nothing yet").
+    @registers = Array.new(@register_count, 0)
+  end
+
+  def add(item)
+    # Step 1: Turn the hash value into a string of 64 zeros and ones.
+    # "%064b" means: format as binary, padded to 64 characters.
+    # Example result: "0010110100001011..." (always 64 chars)
+    bits = format("%064b", Hashing.to_64_bits(item))
+
+    # Step 2: The first few characters decide which bucket.
+    # .to_i(2) reads the string as a base-2 (binary) number.
+    # With precision 14, this gives a number from 0 to 16,383.
+    # Think of it as: "which table does this person sit at?"
+    index = bits[0, @precision].to_i(2)
+
+    # Step 3: Everything after that is what we measure.
+    rest = bits[@precision..]
+
+    # Step 4: Count how many zeros appear before the first one.
+    # This is our "coin flip run." More zeros = rarer = more distinct items.
+    # .index("1") finds the position of the first "1" character.
+    # If there's no "1" at all, every character is a zero (maximum rarity).
+    zeros = rest.index("1") || rest.length
+
+    # Step 5: Add 1 so that "no leading zeros" is 1, not 0.
+    # That keeps 0 meaning "bucket has never been used."
+    rank = zeros + 1
+
+    # Step 6: Only keep it if it's bigger than what we had.
+    # We want the rarest thing this bucket has ever seen.
+    @registers[index] = [@registers[index], rank].max
+  end
+
+  def estimate
+    # Combine all the buckets using harmonic mean.
+    # This averages them in a way that ignores lucky outliers.
+    harmonic = @registers.sum { |rank| 2.0**-rank }
+    raw = alpha * @register_count * @register_count / harmonic
+    empty = @registers.count(&:zero?)
+
+    # If most buckets are still empty, use a simpler formula
+    # that's more accurate at small counts.
+    if raw <= 2.5 * @register_count && empty.positive?
+      (@register_count * Math.log(@register_count.to_f / empty)).round
+    else
+      raw.round
+    end
+  end
+
+  def merge(other)
+    # To combine two counters: take the bigger number from each bucket.
+    # If counter A saw a run of 5 in bucket 7, and counter B saw 9,
+    # then across both of them, someone saw 9. Keep 9.
+    raise ArgumentError, "precision mismatch" unless @precision == other.precision
+    merged = HyperLogLogString.new(precision: @precision)
+    new_regs = @registers.zip(other.registers).map { |a, b| [a, b].max }
+    merged.instance_variable_set(:@registers, new_regs)
+    merged
+  end
+
+  attr_reader :precision, :registers
+
+  private
+
+  # Without correction, the estimate runs about 40% too high.
+  # This happens because some items inevitably land in the same bucket,
+  # inflating the harmonic mean. Alpha scales the result back down.
+  # The specific numbers (0.7213, 1.079) come from the paper's math
+  # and work for any bucket count above 128.
+  def alpha = 0.7213 / (1.0 + (1.079 / @register_count))
+end
+# end: hyperloglog_string_add
+
+# segment: hyperloglog_trace
+def hyperloglog_trace
+  # Small example: 16 buckets so we can see everything.
+  hll = HyperLogLogString.new(precision: 4)
+  names = %w[alice bob carol dave eve frank grace heidi ivan judy]
+
+  names.each do |name|
+    hll.add(name)
+
+    # Show what happened for this name:
+    # - Which bucket did it land in?
+    # - How many leading zeros did it have (rank)?
+    # - What do all 16 buckets look like now?
+    bits = format("%064b", Hashing.to_64_bits(name))
+    index = bits[0, 4].to_i(2)
+    rest = bits[4..]
+    zeros = rest.index("1") || rest.length
+    rank = zeros + 1
+    puts format("add %-6s -> bucket %2d, rank %2d   registers: %s",
+      name, index, rank, hll.registers.inspect)
+  end
+
+  puts "\nestimate after #{names.size} distinct: #{hll.estimate}"
+end
+# Output:
+#   add alice  -> bucket  2, rank  1   registers: [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+#   add bob    -> bucket  8, rank  4   registers: [0, 0, 1, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0]
+#   add carol  -> bucket  4, rank  1   registers: [0, 0, 1, 0, 1, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0]
+#   add dave   -> bucket  6, rank  4   registers: [0, 0, 1, 0, 1, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0]
+#   add eve    -> bucket  8, rank  2   registers: [0, 0, 1, 0, 1, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0]
+#   add frank  -> bucket  7, rank  2   registers: [0, 0, 1, 0, 1, 0, 4, 2, 4, 0, 0, 0, 0, 0, 0, 0]
+#   add grace  -> bucket 14, rank  8   registers: [0, 0, 1, 0, 1, 0, 4, 2, 4, 0, 0, 0, 0, 0, 8, 0]
+#   add heidi  -> bucket  0, rank  2   registers: [2, 0, 1, 0, 1, 0, 4, 2, 4, 0, 0, 0, 0, 0, 8, 0]
+#   add ivan   -> bucket 12, rank  1   registers: [2, 0, 1, 0, 1, 0, 4, 2, 4, 0, 0, 0, 1, 0, 8, 0]
+#   add judy   -> bucket  7, rank  4   registers: [2, 0, 1, 0, 1, 0, 4, 4, 4, 0, 0, 0, 1, 0, 8, 0]
+#
+#   estimate after 10 distinct: 11
+# end: hyperloglog_trace
+
+# segment: hyperloglog_merge
+def hyperloglog_merge_example
+  a = HyperLogLogString.new(precision: 14)
+  b = HyperLogLogString.new(precision: 14)
+
+  5_000.times { |i| a.add("server_a_user_#{i}") }
+  5_000.times { |i| b.add("server_b_user_#{i}") }
+
+  merged = a.merge(b)
+  merged.estimate
+  # => ~10000 (combined distinct count from both servers)
+end
+# end: hyperloglog_merge
+
+# segment: leading_zeros
+def leading_zeros(hash_value, total_bits:)
+  # The bit-packed equivalent of rest.index("1") from the string version.
+  # .bit_length tells us where the highest 1 is (counting from 1).
+  # Subtract from total to get how many zeros sit above it.
+  #
+  # Example: value 5 is 0b101, bit_length is 3.
+  #   In an 8-bit space: 8 - 3 = 5 leading zeros.
+
+  total_bits - hash_value.bit_length
+end
+# end: leading_zeros
+
+# --- Bit-packed versions (the fast path) ---
+
 # segment: bit_left_shift
 def bit_left_shift_example
   # INPUT:      0  0  0  0  0  0  0  1    (1)
@@ -138,93 +390,6 @@ def bit_check_example
 end
 # end: bit_check
 
-
-# segment: linear_counting_formula
-def linear_counting_estimate(total_bits, zeros)
-  # With total_bits bits and zeros of them still clear:
-  -total_bits * Math.log(zeros.to_f / total_bits)
-  # => approximate distinct count
-end
-# end: linear_counting_formula
-
-# segment: linear_counting
-class LinearCounting
-  def initialize(bits: 1 << 20)
-    @bit_count = bits
-    # Pack bits into 64-bit words.
-    # 1,048,576 bits / 64 = 16,384 words.
-    @words = Array.new((bits + 63) / 64, 0)
-  end
-
-  def add(item)
-    # Hash the item and pick one bit position out of @bit_count.
-    position = Hashing.to_64_bits(item) % @bit_count
-
-    # Set that bit using the same pattern from the primer:
-    #   position >> 6   = which word   (position / 64)
-    #   position & 63   = which slot   (position % 64)
-    #   1 << slot       = mask with only that bit set
-    #   |=              = turn it on, leave others alone
-    @words[position >> 6] |= (1 << (position & 63))
-  end
-
-  def estimate
-    # Count how many bits are set across all words.
-    set_bits = @words.sum { |word| word.to_s(2).count("1") }
-    zero_bits = @bit_count - set_bits
-
-    # If every bit is set, the formula breaks (log of zero).
-    return @bit_count if zero_bits.zero?
-
-    # The estimate: -m * ln(zeros / m)
-    (-@bit_count * Math.log(zero_bits.to_f / @bit_count)).round
-  end
-end
-# end: linear_counting
-
-# segment: leading_zeros
-def leading_zeros(hash_value, total_bits:)
-  # How many zeros before the first 1?
-  #
-  # bit_length tells us where the highest 1-bit is (counting from 1, not 0).
-  # Everything above that is zeros.
-  #
-  # Example with total_bits = 8:
-  #   0b00000101  bit_length = 3  (highest 1 is in position 3)
-  #   leading zeros = 8 - 3 = 5
-  #
-  #   0b10000000  bit_length = 8
-  #   leading zeros = 8 - 8 = 0
-  #
-  #   0b00000000  bit_length = 0  (no bits set at all)
-  #   leading zeros = 8 - 0 = 8   (all zeros, maximum rarity)
-
-  total_bits - hash_value.bit_length
-end
-# end: leading_zeros
-
-# segment: harmonic_mean
-def harmonic_mean(values)
-  # Arithmetic mean: sum all values, divide by count.
-  #   [1, 1, 1, 100] => (1+1+1+100) / 4 = 25.75
-  #   One outlier dominates.
-  #
-  # Harmonic mean: count divided by the sum of reciprocals.
-  #   A reciprocal is 1 divided by a number (the "flip" of it).
-  #   [1, 1, 1, 100] => 4 / (1/1 + 1/1 + 1/1 + 1/100)
-  #                    = 4 / (1 + 1 + 1 + 0.01)
-  #                    = 4 / 3.01
-  #                    ≈ 1.33
-  #   The outlier barely registers.
-  #
-  # This is why HyperLogLog uses harmonic mean:
-  # a single measurement that got "lucky" (saw a long run of zeros)
-  # can't drag the entire estimate up the way arithmetic would.
-
-  values.size.to_f / values.sum { |value| 1.0 / value }
-end
-# end: harmonic_mean
-
 # segment: hyperloglog_add
 class HyperLogLog
   HASH_BITS = 64
@@ -238,60 +403,28 @@ class HyperLogLog
   def add(item)
     hash = Hashing.to_64_bits(item)
 
-    # Split the 64-bit hash into two parts using the right shift
-    # and mask from the primer:
-    #
-    # Example with precision=14 and a 64-bit hash:
+    # Split the 64-bit hash value into two parts:
     #   [  14 bits  |          50 bits              ]
     #   [ register  |  remainder (count zeros here) ]
     #
     # Top 14 bits: which register (0..16383)
-    #   hash >> (64 - 14) = hash >> 50
-    #   This drops the bottom 50 bits, leaving the top 14.
     register_index = hash >> (HASH_BITS - @precision)
 
     # Bottom 50 bits: the remainder we count leading zeros in.
-    #   (1 << 50) - 1 builds a mask of 50 ones.
-    #   hash & that mask zeros the top 14 bits, keeps the bottom 50.
     remainder = hash & ((1 << (HASH_BITS - @precision)) - 1)
 
-    # How many leading zeros in the remainder?
-    #   Same idea as the leading_zeros helper from earlier, plus one.
-    #   rank = leading zeros + 1 = position of the first 1-bit.
-    #   (The +1 is a convention from the paper; it avoids rank=0 meaning
-    #   "saw something" vs "never saw anything.")
-    #
-    #   bit_length tells us where the highest 1-bit is (counting from 1).
-    #   A 50-bit remainder with bit_length 47 has 3 leading zeros, rank 4.
-    #   All-zero remainder: bit_length 0, rank 51 (maximum rarity).
+    # rank = leading zeros + 1
     rank = (HASH_BITS - @precision) - remainder.bit_length + 1
 
     # Keep the largest rank this register has ever seen.
     @registers[register_index] = [@registers[register_index], rank].max
   end
-end
-# end: hyperloglog_add
 
-# segment: hyperloglog_estimate
-class HyperLogLog
   def estimate
-    # Harmonic mean of 2^(-rank) across all registers.
-    # Each register contributes 2^(-rank):
-    #   rank 0 (never seen anything) contributes 2^0 = 1
-    #   rank 5 (saw 5 leading zeros)  contributes 2^-5 = 0.03125
-    #   Higher ranks contribute less, pulling the harmonic down less.
     harmonic = @registers.sum { |rank| 2.0**-rank }
-
-    # Raw estimate: alpha * m^2 / harmonic_sum
-    #   alpha is a bias correction constant from the paper.
-    #   m^2 / harmonic is the harmonic mean inverted into a count.
     raw = alpha * @register_count * @register_count / harmonic
     empty = @registers.count(&:zero?)
 
-    # Small-range correction:
-    #   When many registers are still 0 (small cardinality), the raw
-    #   HLL estimate is noisy. Fall back to Linear Counting over the
-    #   empty registers, same formula as LinearCounting above.
     if raw <= 2.5 * @register_count && empty.positive?
       (@register_count * Math.log(@register_count.to_f / empty)).round
     else
@@ -299,23 +432,11 @@ class HyperLogLog
     end
   end
 
-  private
-
-  def alpha = 0.7213 / (1.0 + (1.079 / @register_count))
-end
-# end: hyperloglog_estimate
-
-# segment: hyperloglog_merge
-class HyperLogLog
   def merge(other)
     raise ArgumentError, "precision mismatch" unless @precision == other.precision
-
-    # Merge = elementwise maximum of registers.
-    #   Each register holds "longest leading-zero run seen."
-    #   The longest run across the union is the larger of the two.
     merged = HyperLogLog.new(precision: @precision)
-    new_registers = @registers.zip(other.registers).map { |mine, theirs| [mine, theirs].max }
-    merged.send(:replace_registers, new_registers)
+    new_regs = @registers.zip(other.registers).map { |a, b| [a, b].max }
+    merged.instance_variable_set(:@registers, new_regs)
     merged
   end
 
@@ -323,8 +444,28 @@ class HyperLogLog
 
   private
 
-  def replace_registers(new_registers)
-    @registers = new_registers
+  # Same bias correction as the string version (see comments there).
+  def alpha = 0.7213 / (1.0 + (1.079 / @register_count))
+end
+# end: hyperloglog_add
+
+# segment: linear_counting
+class LinearCounting
+  def initialize(bits: 1 << 20)
+    @bit_count = bits
+    @words = Array.new((bits + 63) / 64, 0)
+  end
+
+  def add(item)
+    position = Hashing.to_64_bits(item) % @bit_count
+    @words[position >> 6] |= (1 << (position & 63))
+  end
+
+  def estimate
+    set_bits = @words.sum { |word| word.to_s(2).count("1") }
+    zero_bits = @bit_count - set_bits
+    return @bit_count if zero_bits.zero?
+    (-@bit_count * Math.log(zero_bits.to_f / @bit_count)).round
   end
 end
-# end: hyperloglog_merge
+# end: linear_counting
