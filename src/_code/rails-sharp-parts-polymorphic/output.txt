@@ -1,0 +1,9 @@
+# segment: explain_with_type_output
+WHERE notable_type = 'Event' AND notable_id = 1
+  => Using index: index_notes_on_notable (notable_type, notable_id)
+# end: explain_with_type_output
+
+# segment: explain_without_type_output
+WHERE notable_id = 1
+  => Full table scan (leading index column notable_type not supplied)
+# end: explain_without_type_output
