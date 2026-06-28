@@ -49,3 +49,7 @@
 - id: rails-sharp-parts
   title: "Rails: The Sharp Parts"
   prefix: "Rails: The Sharp Parts"
+
+- id: ozymandias-on-rails
+  title: "Ozymandias on Rails"
+  prefix: "Ozymandias on Rails"
