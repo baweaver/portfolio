@@ -30,7 +30,7 @@ So you try to get ahead of it and keep the list sorted:
 
 <%= render Shared::CodeBlock.new(file: "beyond-enumerable-heaps/heap.rb", segment: "sort_then_shift", unwrap: true) %>
 
-> **Note on `shift`:** You'll occasionally see `Array#shift` described as `O(n)`. MRI uses a shared buffer with a pointer offset, making it amortized `O(1)` ([benchmark](https://github.com/baweaver/portfolio/blob/main/site/src/_code/beyond-enumerable-heaps/bench_shift.rb) shows flat ~0.014µs/elem from n=10k to n=400k on Ruby 3.4). The cost in this snippet is the re-sort on every arrival, not the `shift`.
+> **Note on `shift`:** You'll occasionally see `Array#shift` described as `O(n)`. MRI uses a shared buffer with a pointer offset, making it amortized `O(1)` ([benchmark](https://github.com/baweaver/portfolio/blob/main/src/_code/beyond-enumerable-heaps/bench_shift.rb) shows flat ~0.014µs/elem from n=10k to n=400k on Ruby 3.4). The cost in this snippet is the re-sort on every arrival, not the `shift`.
 
 Reading the next job is now `O(1)`, but every arrival pays `O(n log n)` to re-sort or `O(n)` to insert in place. You've moved the cost from reading to writing and it's still linear or worse per operation.
 
