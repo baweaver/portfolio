@@ -55,13 +55,17 @@ class Builders::Helpers < SiteBuilder
   end
 
   CODE_FENCE = /\A\s*```/
+  CODE_BLOCK_ERB = /<%=\s*render\s+Shared::CodeBlock\.new\(file:\s*"([^"]+)"(?:,\s*segment:\s*"([^"]+)")?\s*.*?\)\s*%>/
   PROSE_WPM = 238
-  CODE_WPM = 100
+  CODE_WPM = (PROSE_WPM * 0.85).round
 
   # Usage: <%= reading_time(resource) %>
-  # Estimates reading time in minutes. Prose at 238 wpm, code blocks at 100 wpm.
+  # Estimates reading time in minutes. Prose at 238 wpm, code at 85% prose rate.
+  # Resolves CodeBlock component references to count their actual content.
   def reading_time(resource)
-    content = resource.content.to_s
+    source_path = resource.model.origin.original_path.to_s rescue nil
+    content = source_path && File.exist?(source_path) ? File.read(source_path) : resource.content.to_s
+
     prose_words = 0
     code_words = 0
     in_code_block = false
@@ -69,6 +73,11 @@ class Builders::Helpers < SiteBuilder
     content.each_line do |line|
       if line.match?(CODE_FENCE)
         in_code_block = !in_code_block
+        next
+      end
+
+      if (match = line.match(CODE_BLOCK_ERB))
+        code_words += count_segment_words(match[1], match[2])
         next
       end
 
@@ -128,5 +137,28 @@ class Builders::Helpers < SiteBuilder
     post = site.collections.posts.resources.find { |p| p.data.slug == slug }
     raise "post_link: no post found with slug '#{slug}'" unless post
     URI.join(SITE_URL, post.relative_url).to_s
+  end
+
+  def count_segment_words(file, segment)
+    path = File.join(site.source, "_code", file)
+    return 0 unless File.exist?(path)
+
+    lines = File.readlines(path)
+    if segment
+      capturing = false
+      words = 0
+      lines.each do |line|
+        if line.match?(/^\s*# segment:\s*#{Regexp.escape(segment)}\s*$/)
+          capturing = true
+        elsif line.match?(/^\s*# end:\s*#{Regexp.escape(segment)}\s*$/)
+          capturing = false
+        elsif capturing
+          words += line.split.size
+        end
+      end
+      words
+    else
+      lines.reject { |l| l.match?(/^\s*# (segment|end):/) }.sum { |l| l.split.size }
+    end
   end
 end
