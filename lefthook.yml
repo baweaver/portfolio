@@ -19,3 +19,6 @@ pre-commit:
     verify-claims:
       glob: "src/_posts/**/*.md"
       run: ruby scripts/verify_claims.rb
+    lint-links:
+      glob: "src/_posts/**/*.md"
+      run: ruby scripts/lint_links.rb {staged_files}

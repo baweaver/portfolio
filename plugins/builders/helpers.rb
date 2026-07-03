@@ -1,15 +1,56 @@
 class Builders::Helpers < SiteBuilder
+  REPO_URL = "https://github.com/baweaver/portfolio"
+  SITE_URL = "https://baweaver.com"
+
   def build
     helper "img", :img
     helper "link_to", :link_to_helper
     helper "nav_link", :nav_link
     helper "claim", :claim
+    helper "repo_link", :repo_link
+    helper "repo_url", :repo_url
+    helper "post_link", :post_link
+    helper "post_url", :post_url_helper
+    helper "site_link", :site_link
   end
 
   # Usage: <%= claim("moving average count", 6) %>
   # Renders the value inline as plain text. The claim name must have a matching spec assertion.
   def claim(_name, value)
     value.to_s
+  end
+
+  # Usage: <%= repo_link "benchmark", "src/_code/beyond-enumerable-heaps/bench_shift.rb" %>
+  # Generates a link to a file in the repo on the main branch.
+  def repo_link(text, path)
+    %(<a href="#{repo_url(path)}">#{text}</a>).strip
+  end
+
+  # Usage: <%= repo_url "src/_code/beyond-enumerable-heaps/bench_shift.rb" %>
+  # Returns the raw URL. Handles leading slashes safely via URI.join.
+  def repo_url(path)
+    clean = path.delete_prefix("/")
+    URI.join("#{REPO_URL}/", "blob/main/", clean).to_s
+  end
+
+  # Usage: <%= post_link "Last time", slug: "ozymandias-on-rails-the-pedestal-inscription" %>
+  # Looks up a post by slug and generates a link to it.
+  def post_link(text, slug:)
+    url = find_post_url(slug)
+    %(<a href="#{url}">#{text}</a>).strip
+  end
+
+  # Usage: <%= post_url slug: "ozymandias-on-rails-the-pedestal-inscription" %>
+  # Returns the absolute URL for a post, looked up by slug.
+  def post_url_helper(slug:)
+    find_post_url(slug)
+  end
+
+  # Usage: <%= site_link "About", "/about" %>
+  # Generates a full absolute link to any page on the site.
+  def site_link(text, path)
+    url = join_site_url(path)
+    %(<a href="#{url}">#{text}</a>).strip
   end
 
   # Usage: <%= img "/images/logo.png", alt: "Logo", class: "lantern" %>
@@ -45,5 +86,16 @@ class Builders::Helpers < SiteBuilder
 
   def relative_url(path)
     "#{site.base_path}#{path}"
+  end
+
+  def join_site_url(path)
+    normalized = path.start_with?("/") ? path : "/#{path}"
+    URI.join(SITE_URL, normalized).to_s
+  end
+
+  def find_post_url(slug)
+    post = site.collections.posts.resources.find { |p| p.data.slug == slug }
+    raise "post_link: no post found with slug '#{slug}'" unless post
+    URI.join(SITE_URL, post.relative_url).to_s
   end
 end

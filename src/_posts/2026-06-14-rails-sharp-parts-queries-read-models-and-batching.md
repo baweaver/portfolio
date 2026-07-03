@@ -8,7 +8,7 @@ series: "rails-sharp-parts"
 description: "Queries own the reads the way commands own the writes, and a T::Struct is the only thing that crosses between them. Every read here ran against ActiveRecord 8.1 before it went in."
 ---
 
-[Last time](https://baweaver.com/writing/2026/06/13/rails-sharp-parts-callbacks-are-not-invariants/) we moved domain behavior out of callbacks and into commands with one door.
+<%= post_link "Last time", slug: "rails-sharp-parts-callbacks-are-not-invariants" %> we moved domain behavior out of callbacks and into commands with one door.
 
 > **Aside**: The patterns in this series come from my time working in large Rails monoliths (1M+ lines of code, 10+ years of history, hundreds to thousands of engineers). What I see from that vantage point may not be relevant yet to greenfield or early-stage apps. These problems show up at a certain scale and not before.
 
@@ -224,7 +224,7 @@ What's left in the model: schema, internal associations and scopes, `normalizes`
 - The [`batch-loader` gem](https://github.com/exAspArk/batch-loader), and its Rack middleware for clearing the per-request cache
 - [`GraphQL::Dataloader`](https://graphql-ruby.org/dataloader/overview.html), the fiber-based batching alternative
 - [Packwerk](https://github.com/Shopify/packwerk), for `enforce_privacy` and pack boundaries
-- The [callbacks](https://baweaver.com/writing/2026/06/13/rails-sharp-parts-callbacks-are-not-invariants/) and [index](https://baweaver.com/writing/2026/06/12/rails-sharp-parts-an-index-is-not-a-plan/) articles earlier in this series
+- The <%= post_link "callbacks", slug: "rails-sharp-parts-callbacks-are-not-invariants" %> and <%= post_link "index", slug: "rails-sharp-parts-an-index-is-not-a-plan" %> articles earlier in this series
 - [Martin Fowler on CQRS](https://martinfowler.com/bliki/CQRS.html), for the pattern's original framing
 
 ## Wrapping Up

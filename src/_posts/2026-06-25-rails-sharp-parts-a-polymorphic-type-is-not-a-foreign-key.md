@@ -8,7 +8,7 @@ series: "rails-sharp-parts"
 description: "Polymorphic associations store a relationship as a class name in a string with no foreign key. That has unintended consequences which may not be obvious, and this article covers five of them."
 ---
 
-[Last time](https://baweaver.com/writing/2026/06/14/rails-sharp-parts-queries-read-models-and-batching/) we made a `T::Struct` the only thing allowed to cross a pack boundary: typed, inert, and reviewable in five seconds.
+<%= post_link "Last time", slug: "rails-sharp-parts-queries-read-models-and-batching" %> we made a `T::Struct` the only thing allowed to cross a pack boundary: typed, inert, and reviewable in five seconds.
 
 This article is about polymorphic associations, and sharp edges I've had to contend with, especially around delegators when trying a strangler fig refactoring pattern. I still have [an open Rails issue](https://github.com/rails/rails/issues/54799) on the delegator bug I need to find a way to land.
 
@@ -172,7 +172,7 @@ With this schema in place, the database enforces the rules for us. One parent is
 
 A word on [`delegated_type`](https://api.rubyonrails.org/classes/ActiveRecord/DelegatedType.html), since it will come up. It improves the Ruby ergonomics over a bare polymorphic `belongs_to`, but underneath it's the same `belongs_to ..., polymorphic: true` with a `*_type` string column and no foreign key. It does accept a `types:` list, which looks like the allowlist Failure Two said doesn't exist, but that list only generates scopes and predicate helpers (`message?`, `comment?`). It's never checked on assignment or write, so the column still accepts whatever string you put in it. Reach for `delegated_type` for ergonomics, not for safety.
 
-If you need a unified feed across packs (all notes regardless of parent type), compose it at the read layer the way the [queries article](https://baweaver.com/writing/2026/06/14/rails-sharp-parts-queries-read-models-and-batching/) built the reservation view: each pack exposes a by-ids query, a coordinator assembles the feed.
+If you need a unified feed across packs (all notes regardless of parent type), compose it at the read layer the way the <%= post_link "queries article", slug: "rails-sharp-parts-queries-read-models-and-batching" %> built the reservation view: each pack exposes a by-ids query, a coordinator assembles the feed.
 
 ## Further Reading
 
@@ -186,7 +186,7 @@ If you need a unified feed across packs (all notes regardless of parent type), c
 - [`PredicateBuilder::PolymorphicArrayValue`](https://github.com/rails/rails/blob/v8.0.2/activerecord/lib/active_record/relation/predicate_builder/polymorphic_array_value.rb) source
 - [Ruby `Delegator` and `SimpleDelegator`](https://docs.ruby-lang.org/en/4.0/SimpleDelegator.html)
 - [Rails `delegated_type`](https://api.rubyonrails.org/classes/ActiveRecord/DelegatedType.html)
-- The [queries](https://baweaver.com/writing/2026/06/14/rails-sharp-parts-queries-read-models-and-batching/) and [index](https://baweaver.com/writing/2026/06/12/rails-sharp-parts-an-index-is-not-a-plan/) articles earlier in this series
+- The <%= post_link "queries", slug: "rails-sharp-parts-queries-read-models-and-batching" %> and <%= post_link "index", slug: "rails-sharp-parts-an-index-is-not-a-plan" %> articles earlier in this series
 
 ## Wrapping Up
 

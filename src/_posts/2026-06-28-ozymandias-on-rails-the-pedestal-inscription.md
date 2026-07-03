@@ -42,7 +42,7 @@ There we find Ozymandias. The pedestal doesn't read _these works are impressive 
 
 ## What actually goes wrong
 
-I've been writing about the mechanical side of this all month in [Rails: The Sharp Parts](https://baweaver.com/writing/2026/06/13/rails-sharp-parts-callbacks-are-not-invariants/). These are failure modes in the abstractions themselves, and they break regardless of how good your team is or how well-owned the code is. This is only a partial list, and yet it contains so much of what makes Rails Rails:
+I've been writing about the mechanical side of this all month in <%= post_link "Rails: The Sharp Parts", slug: "rails-sharp-parts-callbacks-are-not-invariants" %>. These are failure modes in the abstractions themselves, and they break regardless of how good your team is or how well-owned the code is. This is only a partial list, and yet it contains so much of what makes Rails Rails:
 
 **Callbacks become invisible control flow.** A model with thirty callbacks has sixteen possible execution paths on a single `save`. The person who added callback number twelve can't tell you which of the others fire before or after it. The person reading the controller has no idea any of them exist. The [Rails guides document bypass paths](https://guides.rubyonrails.org/active_record_callbacks.html#skipping-callbacks), and every bulk operation uses them.
 

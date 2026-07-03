@@ -8,7 +8,7 @@ series: "ozymandias-on-rails"
 description: "You inherited a monolith with no map. This is how you start drawing one."
 ---
 
-[Last time](https://baweaver.com/writing/2026/06/28/ozymandias-on-rails-the-pedestal-inscription/) we covered why monoliths decay and what the Rails ecosystem specifically gets wrong at scale. This post is where the practical work starts.
+<%= post_link "Last time", slug: "ozymandias-on-rails-the-pedestal-inscription" %> we covered why monoliths decay and what the Rails ecosystem specifically gets wrong at scale. This post is where the practical work starts.
 
 One of my favorite quotes at work is "when everything is on fire, nothing is on fire." At a distance everything looks urgent, everything looks on fire, and the mistake I see made is that people try and take on the entire thing at once. Your job, at leadership levels in engineering, is to triangulate on the five problems that matter today and make them go away.
 

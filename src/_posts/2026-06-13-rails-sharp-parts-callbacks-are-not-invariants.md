@@ -8,7 +8,7 @@ series: "rails-sharp-parts"
 description: "Callbacks promise that something always happens when a record changes. They can't keep that promise, and Rails documents the ways out. Every failure mode here ran against ActiveRecord 8.1 before it went in, and the replacement is a command with one door."
 ---
 
-[Last time](https://baweaver.com/writing/2026/06/12/rails-sharp-parts-an-index-is-not-a-plan/) we pulled apart indexes and found that `add_index` writes the suggestion, not the plan, and confusing the two leads to production surprises. Buried in the article before that, on locks, was an aside:
+<%= post_link "Last time", slug: "rails-sharp-parts-an-index-is-not-a-plan" %> we pulled apart indexes and found that `add_index` writes the suggestion, not the plan, and confusing the two leads to production surprises. Buried in the article before that, on locks, was an aside:
 
 > Single-ingress writes are worth their weight in gold... They eliminate callbacks, allow for easier instrumentation, clearer optimization paths, and much easier debugging.
 
@@ -228,7 +228,7 @@ None of this holds without enforcement. A convention is only as strong as the me
 
 **One**: Packwerk privacy. The commands already live in `app/public`, so `enforce_privacy: true` makes the model unreachable from outside the pack. A direct `seat.update!` from another pack fails CI with a privacy violation before it merges ([Packwerk](https://github.com/Shopify/packwerk)).
 
-**Two**: RuboCop, a linter, accepts custom rules called cops, and this pattern earns two of them. If you haven't written a cop before, [ASTs in Ruby: Pattern Matching](https://baweaver.com/writing/2022/06/14/asts-in-ruby-pattern-matching-mjd/) covers how to work with Ruby's syntax tree programmatically. The first cop: no mutations outside command files.
+**Two**: RuboCop, a linter, accepts custom rules called cops, and this pattern earns two of them. If you haven't written a cop before, <%= post_link "ASTs in Ruby: Pattern Matching", slug: "asts-in-ruby-pattern-matching-mjd" %> covers how to work with Ruby's syntax tree programmatically. The first cop: no mutations outside command files.
 
 <%= render Shared::CodeBlock.new(file: "rails-sharp-parts-callbacks-are-not-invariants/callbacks.rb", segment: "write_outside_command_cop") %>
 
@@ -306,7 +306,7 @@ For quick reference, here's where each kind of callback behavior lands in the ne
 - [Rails 7.2 release notes](https://guides.rubyonrails.org/7_2_release_notes.html) for `after_all_transactions_commit`
 - [Packwerk](https://github.com/Shopify/packwerk) and [Flipper](https://github.com/flippercloud/flipper) for enforcement and cutover
 - [Media at Scale: Callbacks vs pipelines](https://shopify.engineering/media-at-scale-callbacks-vs-pipelines) (Shopify Engineering) for the same migration at Shopify's scale
-- [ASTs in Ruby: Pattern Matching](https://baweaver.com/writing/2022/06/14/asts-in-ruby-pattern-matching-mjd/) for writing your own cops
+- <%= post_link "ASTs in Ruby: Pattern Matching", slug: "asts-in-ruby-pattern-matching-mjd" %> for writing your own cops
 - [Vanilla Rails is plenty](https://dev.37signals.com/vanilla-rails-is-plenty/) and [Globals, Callbacks and Other Sacrileges](https://dev.37signals.com/globals-callbacks-and-other-sacrileges/) for the steelman of the other side
 - [Strangler Fig Application](https://martinfowler.com/bliki/StranglerFigApplication.html) (Fowler, 2004)
 
