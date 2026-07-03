@@ -86,14 +86,14 @@ def triage_example
   lines << "Reactive order: what customers and revenue feel now"
   symptoms.sort_by { |s| -s.external }.each_with_index do |s, i|
     flag = s.escalate? ? "   <- irreversible" : ""
-    lines << format(" %d. %-37s ext %7d   int %5d%s", i + 1, s.source, s.external, s.internal, flag)
+    lines << format(" %d. %-37s ext %7d   int %7d%s", i + 1, s.source, s.external, s.internal, flag)
   end
 
   lines << ""
   lines << "Proactive order: what engineers and the business carry"
   symptoms.sort_by { |s| -s.internal }.each_with_index do |s, i|
     flag = s.escalate? ? "   <- irreversible" : ""
-    lines << format(" %d. %-37s int %7d   ext %5d%s", i + 1, s.source, s.internal, s.external, flag)
+    lines << format(" %d. %-37s int %7d   ext %7d%s", i + 1, s.source, s.internal, s.external, flag)
   end
 
   lines.join("\n")
