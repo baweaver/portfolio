@@ -22,9 +22,9 @@ class Builders::Helpers < SiteBuilder
   end
 
   # Usage: <%= repo_link "benchmark", "src/_code/beyond-enumerable-heaps/bench_shift.rb" %>
-  # Generates a link to a file in the repo on the main branch.
+  # Generates a markdown link to a file in the repo on the main branch.
   def repo_link(text, path)
-    %(<a href="#{repo_url(path)}">#{text}</a>).strip
+    "[#{text}](#{repo_url(path)})"
   end
 
   # Usage: <%= repo_url "src/_code/beyond-enumerable-heaps/bench_shift.rb" %>
@@ -35,10 +35,10 @@ class Builders::Helpers < SiteBuilder
   end
 
   # Usage: <%= post_link "Last time", slug: "ozymandias-on-rails-the-pedestal-inscription" %>
-  # Looks up a post by slug and generates a link to it.
+  # Looks up a post by slug and generates a markdown link to it.
   def post_link(text, slug:)
     url = find_post_url(slug)
-    %(<a href="#{url}">#{text}</a>).strip
+    "[#{text}](#{url})"
   end
 
   # Usage: <%= post_url slug: "ozymandias-on-rails-the-pedestal-inscription" %>
@@ -48,10 +48,10 @@ class Builders::Helpers < SiteBuilder
   end
 
   # Usage: <%= site_link "About", "/about" %>
-  # Generates a full absolute link to any page on the site.
+  # Generates a markdown link to any page on the site.
   def site_link(text, path)
     url = join_site_url(path)
-    %(<a href="#{url}">#{text}</a>).strip
+    "[#{text}](#{url})"
   end
 
   CODE_FENCE = /\A\s*```/
