@@ -11,6 +11,7 @@ layout: default
         <span class="post-category"><%= resource.data.tags.first %></span>
       <% end %>
       <span class="post-date"><%= resource.data.date.strftime("%B %d, %Y") %></span>
+      <span class="reading-time"><%= reading_time(resource) %> min read</span>
     </div>
     <h1 class="post-title"><%= resource.data.title %></h1>
     <hr class="title-rule" />

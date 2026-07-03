@@ -12,6 +12,7 @@ class Builders::Helpers < SiteBuilder
     helper "post_link", :post_link
     helper "post_url", :post_url_helper
     helper "site_link", :site_link
+    helper "reading_time", :reading_time
   end
 
   # Usage: <%= claim("moving average count", 6) %>
@@ -51,6 +52,36 @@ class Builders::Helpers < SiteBuilder
   def site_link(text, path)
     url = join_site_url(path)
     %(<a href="#{url}">#{text}</a>).strip
+  end
+
+  CODE_FENCE = /\A\s*```/
+  PROSE_WPM = 238
+  CODE_WPM = 100
+
+  # Usage: <%= reading_time(resource) %>
+  # Estimates reading time in minutes. Prose at 238 wpm, code blocks at 100 wpm.
+  def reading_time(resource)
+    content = resource.content.to_s
+    prose_words = 0
+    code_words = 0
+    in_code_block = false
+
+    content.each_line do |line|
+      if line.match?(CODE_FENCE)
+        in_code_block = !in_code_block
+        next
+      end
+
+      words = line.split.size
+      if in_code_block
+        code_words += words
+      else
+        prose_words += words
+      end
+    end
+
+    minutes = (prose_words / PROSE_WPM.to_f) + (code_words / CODE_WPM.to_f)
+    minutes.ceil.clamp(1..)
   end
 
   # Usage: <%= img "/images/logo.png", alt: "Logo", class: "lantern" %>
