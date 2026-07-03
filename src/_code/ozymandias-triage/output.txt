@@ -1,0 +1,21 @@
+# segment: triage_output
+Reactive order: what customers and revenue feel now
+ 1. Checkout#create p95 latency           ext  240000   int   24000
+ 2. SeatMap#show p95 latency              ext  170500   int   18600
+ 3. Checkout::PaymentTimeout              ext   29500   int    2950
+ 4. Seats::DoubleBooking                  ext   23000   int    2300   <- irreversible
+ 5. Orders::ConfirmationEmailFailure      ext    2600   int     520
+ 6. EventSearch::FilterError              ext    1800   int    1800
+ 7. Reporting pool saturation             ext     400   int   22000
+ 8. Events::AdminImageUpload              ext       4   int       4
+
+Proactive order: what engineers and the business carry
+ 1. Checkout#create p95 latency           int   24000   ext  240000
+ 2. Reporting pool saturation             int   22000   ext     400
+ 3. SeatMap#show p95 latency              int   18600   ext  170500
+ 4. Checkout::PaymentTimeout              int    2950   ext   29500
+ 5. Seats::DoubleBooking                  int    2300   ext   23000   <- irreversible
+ 6. EventSearch::FilterError              int    1800   ext    1800
+ 7. Orders::ConfirmationEmailFailure      int     520   ext    2600
+ 8. Events::AdminImageUpload              int       4   ext       4
+# end: triage_output
