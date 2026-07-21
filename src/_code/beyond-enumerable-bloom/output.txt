@@ -1,0 +1,117 @@
+# segment: one_bit_output
+hash(alice) % 32 = 15  -> bitmap[15] = true
+hash(bob)   % 32 = 26  -> bitmap[26] = true
+
+bitmap[15] -> true  (alice was added)
+bitmap[26] -> true  (bob was added)
+bitmap[23] -> false  (zoe was never added, correctly absent)
+bitmap[25] -> false  (mallory was never added, correctly absent)
+# end: one_bit_output
+
+# segment: watch_output
+start                          00000000000000000000000000000000
+add alice  spots [0, 27, 31]   10000000000000000000000000010001
+add bob    spots [9, 15, 27]   10000000010000010000000000010001
+add carol  spots [19, 26, 30]  10000000010000010001000000110011
+add dave   spots [8, 20, 30]   10000000110000010001100000110011
+add eve    spots [10, 22, 25]  10000000111000010001101001110011
+add frank  spots [10, 12, 28]  10000000111010010001101001111011
+# end: watch_output
+
+# segment: query_output
+members (each was added):
+  include?(alice  ) -> true   bits at [0, 27, 31] all on
+  include?(frank  ) -> true   bits at [10, 12, 28] all on
+
+non-members (never added):
+  include?(zoe    ) -> true   bits at [9, 20, 30] are ["on", "on", "on"] (all on -> FALSE POSITIVE)
+  include?(mallory) -> false  bits at [5, 24, 28] are ["off", "off", "on"] (one off -> absent, for certain)
+# end: query_output
+
+# segment: sweep_output
+bits/item = 10, items = 50000
+predicted best hash count = 10 * ln(2) = 6.93 -> 7
+
+ hashes  measured FP
+    1      9.714%
+    2      3.398%
+    3      1.780%
+    4      1.220%
+    5      0.998%
+    6      0.888%
+    7      0.838%  <- predicted optimum
+    8      0.836%
+    9      0.922%
+   10      1.058%
+   11      1.256%
+   12      1.392%
+# end: sweep_output
+
+# segment: sizing_output
+target  10.0%  ->  4.79 bits/item, 3 hashes, measured 10.092%
+target   1.0%  ->  9.59 bits/item, 7 hashes, measured  0.998%
+target   0.1%  -> 14.38 bits/item, 10 hashes, measured  0.098%
+# end: sizing_output
+
+# segment: memory_output
+average URL string size: 80 bytes
+Set of 1,000,000 URLs:   ~80.0 MB (strings alone, before Set overhead)
+Bloom filter (1%):       ~1.20 MB (9.59 bits/item)
+ratio: Set is ~67x larger
+# end: memory_output
+
+# segment: accuracy_output
+false negatives: 0
+measured FP: 1.06%   predicted: 1.0%
+# end: accuracy_output
+
+# segment: merge_output
+both.include?('east-user-42')  -> true
+both.include?('west-user-99')  -> true
+both.include?('nobody-here')   -> false
+all east members present in union? true
+all west members present in union? true
+# end: merge_output
+
+# segment: deletion_output
+alice sits at [31, 32, 59]
+bob sits at [9, 47, 59]
+they share position 59
+
+Before deleting alice: include?(bob) -> true
+After  deleting alice: include?(bob) -> false  (bob was never removed)
+# end: deletion_output
+
+# segment: packed_output
+PackedBloomFilter (double hashing), same settings:
+  false negatives: 0
+  measured FP: 1.00%   predicted: 1.0%
+# end: packed_output
+
+
+# segment: benchmark_output
+ruby 4.0.6 (2026-07-14 revision 03b6d3f889) +PRISM [arm64-darwin25]
+Apple M4 Max
+
+Warming up --------------------------------------
+      BloomFilter#add    23.845k i/100ms
+PackedBloomFilter#add    62.981k i/100ms
+Calculating -------------------------------------
+      BloomFilter#add    236.136k (± 1.1%) i/s    (4.23 μs/i) -      1.192M in   5.048990s
+PackedBloomFilter#add    619.990k (± 1.9%) i/s    (1.61 μs/i) -      3.149M in   5.079192s
+
+Comparison:
+PackedBloomFilter#add:   619990.3 i/s
+      BloomFilter#add:   236136.3 i/s - 2.63x  slower
+
+Warming up --------------------------------------
+      BloomFilter#include?    21.571k i/100ms
+PackedBloomFilter#include?    69.599k i/100ms
+Calculating -------------------------------------
+      BloomFilter#include?    208.994k (± 1.8%) i/s    (4.78 μs/i) -      1.057M in   5.057458s
+PackedBloomFilter#include?    676.427k (± 2.3%) i/s    (1.48 μs/i) -      3.410M in   5.041711s
+
+Comparison:
+PackedBloomFilter#include?:   676427.3 i/s
+      BloomFilter#include?:   208994.1 i/s - 3.24x  slower
+# end: benchmark_output
