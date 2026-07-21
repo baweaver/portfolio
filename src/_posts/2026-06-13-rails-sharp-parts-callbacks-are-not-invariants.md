@@ -169,7 +169,7 @@ With all that said, not every callback needs to go. A callback that's a pure fun
 
 <%= render Shared::CodeBlock.new(file: "rails-sharp-parts-callbacks-are-not-invariants/callbacks.rb", segment: "normalizes_example") %>
 
-([Rails: `ActiveRecord::Normalization`](https://api.rubyonrails.org/classes/ActiveRecord/Normalization.html))
+([Rails: `ActiveRecord::Normalization`](https://api.rubyonrails.org/v8.0/classes/ActiveRecord/Normalization.html))
 
 The rule to verify this is by checking if a callback reads or writes anything beyond its own attributes.
 

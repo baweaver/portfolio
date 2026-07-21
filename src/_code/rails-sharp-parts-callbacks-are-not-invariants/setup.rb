@@ -193,6 +193,7 @@ end
 # --- Command subclasses ---
 
 # segment: reserve_seat_command
+# packs/seats/app/public/seats/reserve_seat.rb
 module Seats
   class ReserveSeat < ApplicationCommand
     class AlreadyReserved < StandardError
@@ -234,6 +235,7 @@ module Seats
   # end: reserve_seat_command
 
   # segment: import_seats_command
+  # packs/seats/app/public/seats/import_seats.rb
   class ImportSeats < ApplicationCommand
     def initialize(rows:) = @rows = rows
 
