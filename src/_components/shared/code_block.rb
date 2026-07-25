@@ -18,7 +18,7 @@ class Shared::CodeBlock < Bridgetown::Component
     path = File.join(Bridgetown::Current.site.source, "_code", file)
     raise "CodeBlock: file not found: #{file}" unless File.exist?(path)
 
-    lines = File.readlines(path)
+    lines = File.readlines(path).map { |l| l.gsub("\t", "    ") }
     result = segment ? extract_segment(lines, segment) : extract_all_segments(lines)
     raise "CodeBlock: segment '#{segment}' not found in #{file}" if segment && result.empty?
     @unwrap ? unwrap_method(result) : result
@@ -30,10 +30,10 @@ class Shared::CodeBlock < Bridgetown::Component
     current = []
 
     lines.each do |line|
-      if line.match?(/^\s*# segment:\s*#{Regexp.escape(name)}\s*$/)
+      if line.match?(/^\s*(?:#|\/\/) segment:\s*#{Regexp.escape(name)}\s*$/)
         capturing = true
         current = []
-      elsif line.match?(/^\s*# end:\s*#{Regexp.escape(name)}\s*$/)
+      elsif line.match?(/^\s*(?:#|\/\/) end:\s*#{Regexp.escape(name)}\s*$/)
         captures << deindent(current).join.chomp if capturing
         capturing = false
       elsif capturing
@@ -50,10 +50,10 @@ class Shared::CodeBlock < Bridgetown::Component
     captured = []
 
     lines.each do |line|
-      if line.match?(/^\s*# segment:\s*\S/)
+      if line.match?(/^\s*(?:#|\/\/) segment:\s*\S/)
         in_segment = true
         next
-      elsif line.match?(/^\s*# end:\s*\S/)
+      elsif line.match?(/^\s*(?:#|\/\/) end:\s*\S/)
         captured << "\n"
         next
       elsif in_segment

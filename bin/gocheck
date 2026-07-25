@@ -1,0 +1,167 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Runs Go tests, builds, and coverage checks for article code directories.
+# Usage:
+#   bin/gocheck                       # all Go modules under src/_code
+#   bin/gocheck rubyist-in-go-land-01 # one specific article
+
+SITE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+CODE_DIR="$SITE_DIR/src/_code"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+pass() { printf "${GREEN}✓${RESET} %s\n" "$1"; }
+fail() { printf "${RED}✗${RESET} %s\n" "$1"; }
+info() { printf "${YELLOW}→${RESET} %s\n" "$1"; }
+
+find_go_modules() {
+  if [[ $# -gt 0 ]]; then
+    for slug in "$@"; do
+      local mod="$CODE_DIR/$slug/go.mod"
+      if [[ -f "$mod" ]]; then
+        echo "$CODE_DIR/$slug"
+      else
+        fail "No go.mod found in $slug"
+        exit 1
+      fi
+    done
+  else
+    find "$CODE_DIR" -name "go.mod" -exec dirname {} \;
+  fi
+}
+
+run_build() {
+  local dir="$1"
+  local slug="${dir#$CODE_DIR/}"
+
+  info "Building $slug"
+  if (cd "$dir" && go build ./... 2>&1); then
+    pass "build $slug"
+  else
+    fail "build $slug"
+    return 1
+  fi
+}
+
+run_tests() {
+  local dir="$1"
+  local slug="${dir#$CODE_DIR/}"
+
+  info "Testing $slug"
+  if (cd "$dir" && go test ./... -count=1 2>&1); then
+    pass "tests $slug"
+  else
+    fail "tests $slug"
+    return 1
+  fi
+}
+
+run_coverage() {
+  local dir="$1"
+  local slug="${dir#$CODE_DIR/}"
+  local coverfile="$dir/coverage.out"
+  local threshold="${COVERAGE_THRESHOLD:-100.0}"
+
+  info "Coverage $slug (threshold: ${threshold}%)"
+
+  # Find packages with test files (skip cmd/ which are mains)
+  local testable
+  testable=$(cd "$dir" && go list ./... 2>/dev/null | grep -v "/cmd/" || true)
+
+  if [[ -z "$testable" ]]; then
+    info "  no testable packages (cmd-only module), skipping coverage"
+    return 0
+  fi
+
+  local output
+  output=$(cd "$dir" && go test $testable -coverprofile="$coverfile" -count=1 2>&1)
+  echo "$output"
+
+  # Extract total coverage percentage
+  local total
+  total=$(cd "$dir" && go tool cover -func="$coverfile" | tail -1 | awk '{print $NF}' | tr -d '%')
+
+  if (( $(echo "$total >= $threshold" | bc -l) )); then
+    pass "coverage ${total}% >= ${threshold}%"
+  else
+    fail "coverage ${total}% < ${threshold}%"
+    printf "\n  ${BOLD}Uncovered functions:${RESET}\n"
+    (cd "$dir" && go tool cover -func="$coverfile" | grep -v "100.0%")
+    return 1
+  fi
+
+  rm -f "$coverfile"
+}
+
+run_vet() {
+  local dir="$1"
+  local slug="${dir#$CODE_DIR/}"
+
+  info "Vet $slug"
+  if (cd "$dir" && go vet ./... 2>&1); then
+    pass "vet $slug"
+  else
+    fail "vet $slug"
+    return 1
+  fi
+}
+
+run_lint() {
+  local dir="$1"
+  local slug="${dir#$CODE_DIR/}"
+
+  if ! command -v golangci-lint &>/dev/null; then
+    info "Lint $slug (skipped, golangci-lint not installed)"
+    return 0
+  fi
+
+  info "Lint $slug"
+  if (cd "$dir" && golangci-lint run ./... 2>&1); then
+    pass "lint $slug"
+  else
+    fail "lint $slug"
+    return 1
+  fi
+}
+
+main() {
+  if [[ "${1:-}" == "clean" ]]; then
+    info "Cleaning coverage files"
+    find "$CODE_DIR" -name "coverage.out" -delete
+    pass "cleaned"
+    exit 0
+  fi
+
+  local modules
+  modules=$(find_go_modules "$@")
+  local failed=0
+
+  printf "${BOLD}Go checks for article code${RESET}\n\n"
+
+  for dir in $modules; do
+    local slug="${dir#$CODE_DIR/}"
+    printf "${BOLD}━━━ %s ━━━${RESET}\n" "$slug"
+
+    run_build "$dir" || ((failed++))
+    run_vet "$dir" || ((failed++))
+    run_lint "$dir" || ((failed++))
+    run_tests "$dir" || ((failed++))
+    run_coverage "$dir" || ((failed++))
+
+    echo
+  done
+
+  if [[ $failed -eq 0 ]]; then
+    printf "${GREEN}${BOLD}All checks passed.${RESET}\n"
+  else
+    printf "${RED}${BOLD}%d check(s) failed.${RESET}\n" "$failed"
+    exit 1
+  fi
+}
+
+main "$@"

@@ -24,6 +24,12 @@ node_modules
 # Mac files
 .DS_Store
 
+# Go coverage
+coverage.out
+
+# PokéAPI fixtures (fetched on demand, not committed)
+src/_code/rubyist-in-go-land-*/fixtures/
+
 # Yarn
 yarn-error.log
 yarn-debug.log*
