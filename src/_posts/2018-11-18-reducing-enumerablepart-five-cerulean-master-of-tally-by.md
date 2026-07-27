@@ -12,7 +12,7 @@ This brings us to part five of Reducing Enumerable where we meet Cerulean, the s
 
 **Table of Contents**
 
-1. [The Journey Begins](/writing)
+1. [The Journey Begins](/writing/2018/11/17/reducing-enumerablepart-one-the-journey-begins/)
 
 1. [Chartreuse — The Master of Map](/writing/2018/11/17/reducing-enumerablepart-two-chartreuse-master-of-map/)
 

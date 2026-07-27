@@ -12,7 +12,7 @@ This brings us to part two of Reducing Enumerable where we meet Chartreuse, the 
 
 **Table of Contents**
 
-1. [The Journey Begins](/writing)
+1. [The Journey Begins](/writing/2018/11/17/reducing-enumerablepart-one-the-journey-begins/)
 
 1. [Chartreuse — The Master of Map](/writing/2018/11/17/reducing-enumerablepart-two-chartreuse-master-of-map/)
 
@@ -24,7 +24,7 @@ This brings us to part two of Reducing Enumerable where we meet Chartreuse, the 
 
 1. [A Final Lesson from Scarlet](/writing/2018/11/18/reducing-enumerablepart-six-a-final-lesson-from-scarlet/)
 
-[<< Previous](/writing) | [Next >>](/writing/2018/11/17/reducing-enumerablepart-three-indigo-master-of-select/)
+[<< Previous](/writing/2018/11/17/reducing-enumerablepart-one-the-journey-begins/) | [Next >>](/writing/2018/11/17/reducing-enumerablepart-three-indigo-master-of-select/)
 
 ## Chartreuse — Master of Map
 
@@ -136,4 +136,4 @@ To implement map with reduce, you need to apply a function to each element of a 
 
 Now that Red had learned from Chartreuse, it was time to visit Master Indigo of Select.
 
-[<< Previous](/writing) | [Next >>](/writing/2018/11/17/reducing-enumerablepart-three-indigo-master-of-select/)
+[<< Previous](/writing/2018/11/17/reducing-enumerablepart-one-the-journey-begins/) | [Next >>](/writing/2018/11/17/reducing-enumerablepart-three-indigo-master-of-select/)
