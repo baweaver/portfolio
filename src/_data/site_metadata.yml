@@ -4,8 +4,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.metadata.myvariable }}.
 
-title: Your awesome title
-tagline: This site is totally awesome
-email: your-email@example.com
+title: Brandon Weaver
+tagline: Systems endure when they're simple enough to understand, flexible enough to evolve, and built by people who grow with them.
 description: >-
-  Write an awesome description for your new site here. It will appear in your document head meta (for Google search results) and in your feed.xml site description.
+  Engineering leadership, Ruby, architecture, autism, and the craft of building systems that last. Writing by Brandon Weaver.
