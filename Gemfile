@@ -47,6 +47,7 @@ gem "rspec", "~> 3.13", group: :test
 gem "covered", "~> 0.28", group: :test
 gem "rails", "~> 8.0", group: :test, require: false
 gem "trilogy", "~> 2.12", group: :test
+gem "pg", "~> 1.5", group: :test
 gem "rubocop", "~> 1.75", group: :test, require: false
 gem "flipper", "~> 1.3", group: :test, require: false
 gem "sorbet-runtime", "~> 0.5", group: :test
