@@ -44,7 +44,7 @@ That `ROLLBACK` from `raise ActiveRecord::Rollback` will undo the `order.update!
 
 A transaction is not a unit of work boundary, it's a hybrid mixture of a Ruby block scope and a database scope, and those side effects happen in pure Ruby.
 
-### The Fix: `after_commit`
+### The Fix: `after_commit` (with caveats)
 
 Move side effects to `after_commit` callbacks or `current_transaction.after_commit` (Rails 7.2+, originating from Evil Martians' [after_commit_everywhere](https://evilmartians.com/chronicles/rails-after_commit-everywhere) gem):
 
